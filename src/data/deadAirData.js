@@ -24,7 +24,7 @@ export const deadAirCaseData = {
       "Onur was alone in the studio at the time of death. However, digital system logs retrieved",
       "later suggest unauthorised remote access and irregular behaviour in audio input systems.",
       "Cause of death remains under forensic review."
-    ].join('\n')
+    ].join(' ')
   },
   evidenceReports: [
     {
@@ -46,7 +46,7 @@ export const deadAirCaseData = {
         "Subject C (unidentified female): Positioned near the exit, back to the camera. She is",
         "wearing a long dark coat and appears to be leaving the premises. Her body type",
         "suggests a heavier build."
-      ].join('\n'),
+      ].join(' '),
       technicalNote: "The timestamp confirms presence at the location shortly before the murder. No sign of external tampering with the footage.",
       relevance: [
         "Places the victim (Onur Aydın) at the location minutes before the incident.",
@@ -54,7 +54,7 @@ export const deadAirCaseData = {
         "exit/entry timeline.",
         "Subject C matches Selin Aydın's general appearance based on previous witness",
         "statements but cannot be confirmed visually due to her back facing the camera."
-      ].join('\n')
+      ].join(' ')
     },
     {
       id: "evidence2",
@@ -70,12 +70,12 @@ export const deadAirCaseData = {
         "by a decimal value. The final column features the",
         "name \"Cast\" handwritten in the lower-right corner,",
         "suggesting authorship or ownership."
-      ].join('\n'),
+      ].join(' '),
       technicalNote: [
         "The values resemble audio frequency measurements or internal tuning parameters,",
         "though no clear unit is indicated. Analysis suggests a pattern correlating with broadcast",
         "signal strength or modulation testing, possibly linked to the studio's control panel."
-      ].join('\n'),
+      ].join(' '),
       relevance: [
         "The presence of this list in close proximity to the victim's body may indicate last",
         "activity.",
@@ -83,7 +83,7 @@ export const deadAirCaseData = {
         "references.",
         "If treated as a cipher, the numbers could lead to a password or hidden folder—further",
         "forensic decryption is pending."
-      ].join('\n')
+      ].join(' ')
     },
     {
       id: "evidence3",
@@ -100,7 +100,7 @@ export const deadAirCaseData = {
         "deliberately applied. There is no accompanying text, date, or signature.",
         "The sheet has a slight horizontal fold and smudged edges, suggesting it was handled or",
         "carried loosely. No additional markings were found on the reverse side.."
-      ].join('\n'),
+      ].join(' '),
       notableClues: [
         "The handwriting has not yet been formally matched to any individual, though its",
         "location strongly suggests ownership or use by Onur Aydın.",
@@ -109,7 +109,7 @@ export const deadAirCaseData = {
         "notes.",
         "Placement on the studio desk may indicate intentional disclosure, a signal, or a lapse in",
         "hiding a sensitive reference."
-      ].join('\n'),
+      ].join(' '),
       relevance: [
         "The presence of \"RAKUN11\" on an unmarked paper in the studio strongly ties the",
         "victim\'s personal and professional domains.",
@@ -117,7 +117,7 @@ export const deadAirCaseData = {
         "broadcast or had been referencing them shortly before his death.",
         "May serve as a connecting clue between the hidden digital folder and Onur's final",
         "broadcast preparation."
-      ].join('\n')
+      ].join(' ')
     },
     {
       id: "evidence4",
@@ -140,14 +140,14 @@ export const deadAirCaseData = {
         "indirectly to the victim, Onur Aydın. No direct name",
         "is used, but context and phrasing strongly imply the",
         "subject is Onur. The tone is wounded, restrained, and accusatory."
-      ].join('\n'),
+      ].join(' '),
       transcribedExcerpt: [
         "Maybe: 'You don't get to use my voice like that.'",
         "Or: 'That part of me isn't yours to dissect.'",
         "…",
         "But knowing you…",
         "You'd probably just turn it into another story."
-      ].join('\n'),
+      ].join(' '),
       notableDetails: [
         "The page was not intentionally left as a message; it may have fallen or been torn off",
         "accidentally.",
@@ -155,7 +155,7 @@ export const deadAirCaseData = {
         "consistent with being pulled hastily from a spiral-bound notebook.",
         "Found near where Selin was observed standing shortly before the time of death,",
         "according to camera positioning logs."
-      ].join('\n'),
+      ].join(' '),
       relevance: [
         "The content strongly suggests Selin felt betrayed and emotionally violated by Onur's",
         "use of personal information in his broadcasts.",
@@ -163,7 +163,7 @@ export const deadAirCaseData = {
         "unresolved tension toward the victim.",
         "Combined with her verbal testimony and message records, this note adds weight to her",
         "possible involvement or foreknowledge of the incident."
-      ].join('\n')
+      ].join(' ')
     },
     {
       id: "evidence5",
@@ -192,7 +192,7 @@ export const deadAirCaseData = {
         "photograph corresponds to the presumed father",
         "figure, further supporting the theory that the victim, Onur Aydın, may have been",
         "experiencing psychological distress related to his father."
-      ].join('\n'),
+      ].join(' '),
       notableDetails: [
         "Based on aging and appearance, the image likely dates back 20–25 years.",
         "The individual whose face was removed appears to have been a male adult, possibly",
@@ -201,7 +201,7 @@ export const deadAirCaseData = {
         "child (possibly a sibling).",
         "The frame shows signs of wear and has smudges along the glass, indicating frequent",
         "handling."
-      ].join('\n'),
+      ].join(' '),
       relevance: [
         "This image may point to a deeply personal and unresolved familial conflict.",
         "In Onur's journal entries and psychological notes, multiple references are made to",
@@ -211,7 +211,7 @@ export const deadAirCaseData = {
         "While not directly connected to the crime, the symbolic damage represented by this",
         "object suggests possible motivations and psychological deterioration in the days",
         "leading to Onur's death."
-      ].join('\n')
+      ].join(' ')
     },
     {
       id: "evidence6",
@@ -232,7 +232,7 @@ export const deadAirCaseData = {
         "below includes a wooden console, a standing",
         "lamp, a record player, and an open notebook",
         "placed on a coffee table."
-      ].join('\n'),
+      ].join(' '),
       notableElements: [
         "The album titles and aesthetics suggest a thematic preoccupation with isolation,",
         "psychological disintegration, and internal conflict.",
@@ -242,7 +242,7 @@ export const deadAirCaseData = {
         "hidden narratives or repressed accounts, consistent with his journal entries.",
         "A record player sits beneath the framed covers, supporting his known use of music in",
         "his broadcasts and mood setting."
-      ].join('\n'),
+      ].join(' '),
       relevance: [
         "The artistic and psychological motifs displayed on the wall reinforce the idea that Onur",
         "curated his environment to mirror his inner state and the emotional experiences he",
@@ -252,7 +252,7 @@ export const deadAirCaseData = {
         "If any of the radio segments are found to correspond thematically or linguistically to",
         "these albums, this setup may demonstrate intentional emotional projection or",
         "manipulation."
-      ].join('\n')
+      ].join(' ')
     },
     {
       id: "evidence7",
@@ -271,14 +271,14 @@ export const deadAirCaseData = {
         "the shelf is a wall with six framed documents: four",
         "diplomas/certificates and two other official-looking",
         "papers, one of which appears to be a formal letter."
-      ].join('\n'),
+      ].join(' '),
       notableElements: [
         "One visible certificate reads: \"CERTIFICATE OF COMPLETION – Center for Narrative",
         "Trauma Studies.\"",
         "A small sticky note on the wall reads \"RAKUN11 – Archive.\"",
         "Lighting in the room is intentionally low and moody, suggesting an introspective",
         "atmosphere."
-      ].join('\n'),
+      ].join(' '),
       relevance: [
         "The bookshelf and certificates support Onur\'s persona as an intellectual, potentially",
         "self-proclaimed therapist or analyst.",
@@ -289,7 +289,7 @@ export const deadAirCaseData = {
         "workspace and the suspicious material.",
         "This location matches earlier journal entries in which Onur describes his home study",
         "as his \"real archive.\""
-      ].join('\n')
+      ].join(' ')
     },
     {
       id: "evidence8",
@@ -297,7 +297,7 @@ export const deadAirCaseData = {
       imageName: "onur_computer.png",
       imageSource: require('../assets/images/evidence/onur_computer.png'),
       label: "ONA-PC-01",
-      location: "Onur Aydın\'s apartment",
+      location: "Onur Aydın's apartment",
       dateCollected: "13.03.2025",
       collectedBy: "CSI Officer Derya Tural",
       reportCode: "HERA-DA-E11",
@@ -307,17 +307,65 @@ export const deadAirCaseData = {
         "Device was powered off at time of recovery.",
         "Connected to charger.",
         "No physical damage noted. Serial number intact."
-      ].join('\n'),
+      ].join(' '),
       forensicNotes: [
         "Device successfully imaged using write-block tools.",
         "No user password required to access desktop interface.",
-        "Several key folders located on desktop. Three are encrypted:",
+        "Several key folders located on desktop. Three are password-protected:",
         "📁 Onur (requires password)",
         "📁 Podcast (requires password)",
         "📁 RAKUN-11 (requires password)"
-      ].join('\n'),
-      digitalAccess: "Click to explore recovered contents: Onur's Computer"
-    }
+      ].join(' '),
+      digitalAccess: "Click to explore recovered contents: Onur's Computer",
+      lockedFolders: [
+        {
+          id: "ONUR_FOLDER",
+          name: "Onur",
+          isLocked: true,
+          password: "IAMBECOMINGHIM",
+          unlockPrompt: "Enter password to access Onur's personal files:",
+          unlockedContent: [
+            { name: '02-03-2025.pdf', type: 'pdf', path: 'deadAir/computer/Onur/02-03-2025.pdf' },
+            { name: '03-03-2025.pdf', type: 'pdf', path: 'deadAir/computer/Onur/03-03-2025.pdf' },
+            { name: '04-03-2025.pdf', type: 'pdf', path: 'deadAir/computer/Onur/04-03-2025.pdf' },
+            { name: '05-03-2025.pdf', type: 'pdf', path: 'deadAir/computer/Onur/05-03-2025.pdf' },
+            { name: '06-03-2025.pdf', type: 'pdf', path: 'deadAir/computer/Onur/06-03-2025.pdf' },
+            { name: '07-03-2025.pdf', type: 'pdf', path: 'deadAir/computer/Onur/07-03-2025.pdf' },
+            { name: '08-03-2025.pdf', type: 'pdf', path: 'deadAir/computer/Onur/08-03-2025.pdf' },
+            { name: '09-03-2025.pdf', type: 'pdf', path: 'deadAir/computer/Onur/09-03-2025.pdf' },
+            { name: '10-03-2025.pdf', type: 'pdf', path: 'deadAir/computer/Onur/10-03-2025.pdf' },
+            { name: '11-03-2025.pdf', type: 'pdf', path: 'deadAir/computer/Onur/11-03-2025.pdf' },
+          ]
+        },
+        {
+          id: "PODCAST_FOLDER",
+          name: "Podcast",
+          isLocked: true,
+          password: "GHEL",
+          unlockPrompt: "Enter password to access Podcast scripts:",
+          unlockedContent: [
+            { name: 'Behind Our Eyes.pdf', type: 'pdf', path: 'deadAir/computer/Podcast/Behind Our Eyes.pdf' },
+            { name: 'Echo Without a Voice.pdf', type: 'pdf', path: 'deadAir/computer/Podcast/Echo Without a Voice.pdf' },
+            { name: 'The Man in the Fourth Row.pdf', type: 'pdf', path: 'deadAir/computer/Podcast/The Man in the Fourth Row.pdf' },
+            { name: 'The One Who Wasnt There.pdf', type: 'pdf', path: 'deadAir/computer/Podcast/The One Who Wasnt There.pdf' },
+            { name: 'What She Never Said.pdf', type: 'pdf', path: 'deadAir/computer/Podcast/What She Never Said.pdf' },
+          ]
+        },
+        {
+          id: "RAKUN11_FOLDER",
+          name: "Rakun-11",
+          isLocked: true,
+          password: "739167",
+          unlockPrompt: "Enter password to access Rakun-11 research:",
+          unlockedContent: [
+            { name: 'R-1/', type: 'dir' },
+            { name: 'R-2/', type: 'dir' },
+            { name: 'R-3/', type: 'dir' },
+            { name: 'R-4/', type: 'dir' },
+          ]
+        }
+      ]
+    },
   ],
   autopsyReport: {
     subject: "Aydın, Onur",
@@ -336,7 +384,7 @@ export const deadAirCaseData = {
       "Hair: Dark brown",
       "Eyes: Brown",
       "Identified By: Fingerprint confirmation – CID database match"
-    ].join('\n'),
+    ].join(' '),
     conditionOfBody: [
       "Time of Death Estimation: Between 17:45 and 17:52 on 12 March 2025",
       "Body Position at Scene: Seated upright in studio chair, head slightly tilted forward, both",
@@ -347,7 +395,7 @@ export const deadAirCaseData = {
       "External Injuries: None noted",
       "Notable Details: Skin of fingertips lightly reddened; a small superficial abrasion on",
       "right temple (likely postural contact)"
-    ].join('\n'),
+    ].join(' '),
     internalExamination: [
       "A. CARDIOVASCULAR SYSTEM:",
       "No structural anomalies",
@@ -366,7 +414,7 @@ export const deadAirCaseData = {
       "statements, last known meal at 17:15)",
       "No ulcerations, tears, or hemorrhage",
       "Mild gastritis consistent with chronic stress"
-    ].join('\n'),
+    ].join(' '),
     toxicologyReport: [
       "Blood, urine, and vitreous samples analyzed.",
       "Negative for: Alcohol, benzodiazepines, opioids, amphetamines, barbiturates",
@@ -374,7 +422,7 @@ export const deadAirCaseData = {
       "Special Screening:",
       "No neurotoxins, poisons, or chemical agents detected",
       "No evidence of electrocution via direct skin contact (i.e., no burn marks)"
-    ].join('\n'),
+    ].join(' '),
     electrophysiologicalConsiderations: [
       "Skin conductivity tested via dermal electrodes – no classic electrocution pattern",
       "Internal tissues (muscle cross-section, thoracic cavity) showed abnormal electrical",
@@ -382,7 +430,7 @@ export const deadAirCaseData = {
       "interference (EMI)",
       "Further investigation required on potential environmental electrical surges",
       "Log records confirm voltage spike at 17:42 from studio control panel"
-    ].join('\n'),
+    ].join(' '),
     conclusionCauseOfDeath: [
       "Official Cause of Death:",
       "Acute cardiac arrhythmia due to external environmental electrical disruption",
@@ -394,7 +442,7 @@ export const deadAirCaseData = {
       "induced fatal event. No direct skin electrocution noted. Environment at time of death",
       "(radio studio) should be further assessed for system malfunction, sabotage, or induced",
       "surge conditions."
-    ].join('\n')
+    ].join(' ')
   },
   interrogations: [
     {
@@ -439,13 +487,13 @@ export const deadAirCaseData = {
         "CİHAN: (pause) Oddly… like something had gone silent. A full silence. I used to feel his",
         "presence in every room, even when he wasn\'t there. Now… it\'s just still. Not peace. Just",
         "stillness. I didn\'t like him much, but he filled space. That has a weight of its own."
-      ].join('\n'),
+      ].join(' '),
       inspectorsNote: [
         "Cihan Karakaş displayed a high level of technical awareness. He",
         "admits to professional friction with the victim but denied direct involvement. His",
         "testimony is consistent. No clear signs of deception, but the rivalry and his presence at the",
         "time of the incident warrant further observation."
-      ].join('\n')
+      ].join(' ')
     },
     {
       id: "beril",
@@ -489,12 +537,12 @@ export const deadAirCaseData = {
         "BERİL: (takes a deep breath) It was a shock… and a strange feeling of dread. I didn\'t expect",
         "anything like this. But to be honest, the way Onur operated, so isolated and so intense—it",
         "felt like something was going to give. Not death, obviously. But something."
-      ].join('\n'),
+      ].join(' '),
       inspectorsNote: [
         "Beril Yaman spoke cautiously and deliberately. Avoided technical",
         "detail while clearly possessing strong knowledge. Remote system access confirmed. She",
         "denies tampering. Emotional response minimal. A person of interest."
-      ].join('\n')
+      ].join(' ')
     },
     {
       id: "selin",
@@ -538,12 +586,12 @@ export const deadAirCaseData = {
         "that\'s what scared me. People think silence means nothing. But sometimes silence is where",
         "the real damage happens.",
         "Sometimes silence kills more than words ever could."
-      ].join('\n'),
+      ].join(' '),
       inspectorsNote: [
         "Selin Aydın remained composed, yet emotionally layered. She",
         "admitted being present but was vague about her actions. Language was careful. Repressed",
         "anger or pain possible. May be withholding more than she revealed."
-      ].join('\n')
+      ].join(' ')
     },
     {
       id: "suheyla",
@@ -590,12 +638,12 @@ export const deadAirCaseData = {
         "just to hear what he\'d say between the lines. He once said, \"Some voices echo only when",
         "you\'re alone.\" That stuck with me.",
         "Maybe now he\'s the one echoing."
-      ].join('\n'),
+      ].join(' '),
       inspectorsNote: [
         "Süheyla Bora\'s testimony was emotionally erratic, bordering on",
         "poetic. While not directly linked to the incident, her statements indicate ongoing personal",
         "turmoil. Her presence at the station is confirmed. Needs no further immediate follow-up."
-      ].join('\n')
+      ].join(' ')
     },
     {
       id: "mine",
@@ -645,13 +693,13 @@ export const deadAirCaseData = {
         "MİNE: We barely spoke. A nod, a quick hello. Once he asked me not to use the vacuum",
         "during his show—it interfered with the sound. That\'s it. No friendliness, no rudeness",
         "either. He had a… distant kind of presence. Not warm, not cold. Just… closed off."
-      ].join('\n'),
+      ].join(' '),
       inspectorsNote: [
         "Mine Taşdemir gave a simple yet potentially significant statement.",
         "Her actions during cleaning may have disrupted the system unknowingly. Her description",
         "of the static noise aligns with the timeline of the incident. Needs to be cross-referenced",
         "with technical analysis."
-      ].join('\n')
+      ].join(' ')
     },
     {
       id: "murat",
@@ -692,13 +740,13 @@ export const deadAirCaseData = {
         "MURAT: No technical issues or anything. But the atmosphere was off. A bit too quiet.",
         "Maybe it was just the weather. Onur seemed more distracted than usual. Normally he",
         "made eye contact. That day he didn\'t even glance my way."
-      ].join('\n'),
+      ].join(' '),
       inspectorsNote: [
         "Murat Kaya provided clear and observant testimony. His account",
         "aligns with CCTV footage. Likely identified Selin Aydın, though not by name. No",
         "involvement in the incident, but useful timeline witness. Atmosphere and behaviour",
         "details noted."
-      ].join('\n')
+      ].join(' ')
     },
     {
       id: "haluk",
@@ -742,13 +790,13 @@ export const deadAirCaseData = {
         "HALUK: It was shocking. But when I saw the warning in the logs, a part of me felt…",
         "something was coming. Not death, no—but a breakdown of some kind. There was too",
         "much tension in that room that night, even in the data."
-      ].join('\n'),
+      ].join(' '),
       inspectorsNote: [
         "Haluk Sezgin provided a composed and technically insightful",
         "testimony. His observations point to the likelihood of intentional interference. No",
         "indication of direct involvement. His analysis of system behaviour is credible and",
         "valuable."
-      ].join('\n')
+      ].join(' ')
     },
     {
       id: "levent",
@@ -790,13 +838,13 @@ export const deadAirCaseData = {
         "LEVENT: It shocked me, but… it didn\'t surprise me. Onur lived on the edge. I always",
         "thought something would snap. I just never thought it\'d be him that couldn\'t find a way",
         "out. He usually did."
-      ].join('\n'),
+      ].join(' '),
       inspectorsNote: [
         "Levent Ertuğrul was composed and cautious. He admitted the",
         "connection attempt and acknowledged his resentment towards Onur. As the access failed,",
         "technical logs clear him of direct involvement. However, his motivation is noted. No",
         "further action at this stage."
-      ].join('\n')
+      ].join(' ')
     }
   ],
   technicalAnalysisReport: {
@@ -812,14 +860,14 @@ export const deadAirCaseData = {
       "incident and securely extracted by forensic imaging from the local hard drive.",
       "The investigation aims to determine whether unauthorized or malicious digital activity",
       "occurred during or prior to the suspected time of death of Onur Aydın."
-    ].join('\n'),
+    ].join(' '),
     methodOfAcquisition: [
       "System unit (ID: STDB-HR-07B) was seized by forensic personnel on 13.03.2025 at 08:52.",
       "Hard disk imaged using FTK Imager v7.2 (write-blocked)",
       "Log file cihaz_log_12mart.txt recovered from /System/Logs/internal/",
       "SHA256 hash:",
       "f47c8ae9b563bcb77d10d8164a5e5f6de79fa7a1a0f3d9aa0ce6b9237a9e3f29 (verified)"
-    ].join('\n'),
+    ].join(' '),
     timelineOfEvents: [
       "[This section would ideally contain the structured timeline from the original document.",
       "For brevity in this data object, it\'s omitted but should be parsed and included in a real implementation.",
@@ -829,7 +877,7 @@ export const deadAirCaseData = {
       "19:50-19:52: USB activity",
       "19:53:03: Voltage surge",
       "19:57:16: System shutdown]"
-    ].join('\n'), 
+    ].join(' '), 
     technicalInterpretation: [
       "Concurrent Session Conflict (19:47): The log shows that an attempt was made to",
       "establish a second remote connection under the user \"frekans11\" — possibly using a",
@@ -850,7 +898,7 @@ export const deadAirCaseData = {
       "System Shutdown (19:57:16):",
       "The system did not shut down through normal procedures; crash was triggered",
       "internally, possibly as a failsafe after overload."
-    ].join('\n'),
+    ].join(' '),
     conclusions: [
       "Beril Yaman\'s remote login was real and successful, granting her full access to the system prior to the incident.",
       "A second actor attempted unauthorized access but was blocked — identity unknown, but the alias \"frekans11\" was used.",
@@ -864,7 +912,7 @@ export const deadAirCaseData = {
       "Interview all personnel with access to the broadcast USB gear",
       "Deep forensic recovery of last_mix.wav (referenced but unaired audio file)",
       "Full spectrum EMI test for potential sabotage instrumentation"
-    ].join('\n')
+    ].join(' ')
   },
   solutionSection: {
     title: "YOU'VE REACHED THE END. OR HAVE YOU?",
@@ -878,7 +926,7 @@ export const deadAirCaseData = {
       "And more importantly—why?",
       "The answers are no longer hidden.",
       "They're waiting—quiet, deliberate, undeniable."
-    ].join('\n'),
+    ].join(' '),
     passwordHintsLinkText: "ALL PUZZLE PASSWORD HINTS & SOLUTIONS",
     passwordHintsContent: [
       "(For players who couldn't crack every code—or want to verify their logic)",
@@ -886,7 +934,7 @@ export const deadAirCaseData = {
       "Every voice, a warning.",
       "And every moment of silence…",
       "a message you weren't supposed to hear."
-    ].join('\n'),
+    ].join(' '),
     revealSolutionLinkText: "Click the link below to reveal the full solution:",
     solutionLinkName: "Confession Letters", 
     thankYouMessage: [
@@ -905,6 +953,6 @@ export const deadAirCaseData = {
       "Every frequency counts.",
       "With gratitude,",
       "– The DeCodeCase Team"
-    ].join('\n')
+    ].join(' ')
   }
 }; 

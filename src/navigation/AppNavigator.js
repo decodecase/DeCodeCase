@@ -11,6 +11,7 @@ import HomeScreen from '../screens/HomeScreen';
 import CaseDetailScreen from '../screens/CaseDetailScreen';
 import CheckoutScreen from '../screens/CheckoutScreen';
 import GamePlayScreen from '../screens/GamePlayScreen';
+import PdfViewerScreen from '../screens/PdfViewerScreen';
 
 // Placeholder screens for bottom tabs
 const PlaceholderScreen = ({ route }) => (
@@ -65,6 +66,11 @@ const AppNavigator = () => {
       <Stack.Screen name="CaseDetail" component={CaseDetailScreen} />
       <Stack.Screen name="Checkout" component={CheckoutScreen} />
       <Stack.Screen name="GamePlay" component={GamePlayScreen} />
+      <Stack.Screen
+        name="PdfViewer"
+        component={PdfViewerScreen}
+        options={{ headerBackTitle: 'Back' }}
+      />
     </Stack.Navigator>
   );
 };

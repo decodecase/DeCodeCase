@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, Image, Modal } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, Image, Modal, TextInput, Alert, ActivityIndicator, Dimensions, Linking } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { useNavigation } from '@react-navigation/native';
+import { useTheme } from '@react-navigation/native';
 
 // Import the case data service
 import { getCaseDataById } from '../data/caseDataService.js';
@@ -37,8 +39,8 @@ const InfoBlock = ({ title, content, isTranscript = false, iconName = null, text
     <View style={styles.infoBlockContainer}> 
       {iconName && <Ionicons name={iconName} size={20} color="#FFD700" style={styles.infoBlockIcon} />}
       <View style={styles.infoBlockTextContainer}>
-        {title && <Text style={styles.infoBlockTitle}>{title}</Text>}
-        {renderContent()}
+      {title && <Text style={styles.infoBlockTitle}>{title}</Text>}
+      {renderContent()}
       </View>
     </View>
   );
@@ -67,9 +69,88 @@ const CollapsibleSection = ({ title, children }) => {
   );
 };
 
+// --- RE-ADD: Collapsible Component for Locked Folders ---
+const CollapsibleFolder = ({ 
+  folder, 
+  isUnlocked, 
+  passwordValue, 
+  errorValue, 
+  onPasswordChange, 
+  onUnlockPress, 
+  onFilePress 
+}) => {
+  const [isCollapsed, setIsCollapsed] = useState(true); 
+
+  return (
+    <View style={styles.folderContainer}> 
+      <TouchableOpacity 
+        style={styles.collapsibleFolderHeader}
+        onPress={() => setIsCollapsed(!isCollapsed)}
+        activeOpacity={0.7}
+      >
+        <Ionicons 
+          name={isUnlocked ? 'lock-open-outline' : 'lock-closed-outline'} 
+          size={20} 
+          color={isUnlocked ? '#4CAF50' : '#FF6B6B'}
+          style={styles.folderLockIcon}
+        />
+        <Text style={styles.folderTitleText}>{folder.name}</Text>
+        <Text style={styles.collapsibleFolderIcon}>{isCollapsed ? '▼' : '▲'}</Text>
+      </TouchableOpacity>
+
+      {!isCollapsed && (
+        <View style={styles.collapsibleFolderContent}> 
+          {isUnlocked ? (
+            <View style={styles.unlockedContentContainer}>
+              {folder.unlockedContent?.map((item, index) => (
+                <TouchableOpacity 
+                  key={index} 
+                  style={styles.fileItem} 
+                  onPress={() => onFilePress(item)} // Use the handler passed via props
+                >
+                  <Ionicons 
+                    name={item.type === 'pdf' ? 'document-text-outline' : 'folder-outline'} 
+                    size={20} 
+                    color="#A9A9A9" 
+                    style={styles.fileIcon}
+                  />
+                  <Text style={styles.fileName}>{item.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          ) : (
+            <View style={styles.lockPromptContainer}>
+               <Text style={styles.lockPromptText}>{folder.unlockPrompt}</Text>
+               <TextInput
+                style={styles.passwordInput}
+                placeholder="Password"
+                placeholderTextColor="#888"
+                value={passwordValue}
+                onChangeText={onPasswordChange}
+                secureTextEntry={true}
+               />
+               {errorValue && (
+                <Text style={styles.errorText}>{errorValue}</Text>
+               )}
+               <TouchableOpacity 
+                style={styles.unlockButton}
+                onPress={onUnlockPress}
+               >
+                <Text style={styles.unlockButtonText}>Unlock</Text>
+               </TouchableOpacity>
+            </View>
+          )}
+        </View>
+      )}
+    </View>
+  );
+};
+
 // --- Main GamePlayScreen Component ---
 
-const GamePlayScreen = ({ route, navigation }) => {
+const GamePlayScreen = ({ route }) => {
+  const navigation = useNavigation();
+  const { colors } = useTheme();
   const { caseId } = route.params; 
   const [activeSectionKey, setActiveSectionKey] = useState('CaseIntro');
   const [caseData, setCaseData] = useState(null);
@@ -77,22 +158,67 @@ const GamePlayScreen = ({ route, navigation }) => {
   const [modalVisible, setModalVisible] = useState(false); // State for image modal
   const [selectedImageSource, setSelectedImageSource] = useState(null); // State for modal image
 
+  // State for locked folder management
+  const [unlockedFolders, setUnlockedFolders] = useState({}); // { [folderId]: boolean }
+  const [folderPasswords, setFolderPasswords] = useState({}); // { [folderId]: string }
+  const [folderErrors, setFolderErrors] = useState({});     // { [folderId]: string | null }
+
+  // NEW: State for PDF modal (for web)
+  const [isPdfModalVisible, setIsPdfModalVisible] = useState(false);
+  const [currentPdfUri, setCurrentPdfUri] = useState(null);
+
   // Load Case Data based on caseId using the service
   useEffect(() => {
+    console.log("[GamePlayScreen] useEffect triggered. caseId:", caseId); // <-- Log caseId
     const data = getCaseDataById(caseId);
+    console.log("[GamePlayScreen] Data loaded:", data ? `Case Title: ${data.title}` : 'null'); // <-- Log loaded data (or null)
+
     if (data) {
       setCaseData(data);
       setActiveSectionKey('CaseIntro'); // Start at the intro for the loaded case
+
+      // Initialize state for locked folders based on loaded data
+      const initialUnlocked = {};
+      const initialPasswords = {};
+      const initialErrors = {};
+      data.evidenceReports?.forEach(report => {
+        report.lockedFolders?.forEach(folder => {
+          initialUnlocked[folder.id] = false; // Start all folders as locked
+          initialPasswords[folder.id] = '';
+          initialErrors[folder.id] = null;
+        });
+      });
+      setUnlockedFolders(initialUnlocked);
+      setFolderPasswords(initialPasswords);
+      setFolderErrors(initialErrors);
+
     } else {
-      // Handle case data not found (e.g., navigate back, show error, or load placeholder)
-      console.error('Failed to load case data for:', caseId);
+      console.error('[GamePlayScreen] Failed to load case data for:', caseId); // Keep error log
       setCaseData(null); // Ensure caseData is null if not found
+      setUnlockedFolders({}); // Reset folder states
+      setFolderPasswords({});
+      setFolderErrors({});
       // Optionally, navigate back or show an error message to the user
       // navigation.goBack(); 
       // alert('Error: Could not load case details.');
     }
     setShowSolution(false); // Reset solution visibility when case changes
   }, [caseId, navigation]); // Added navigation to dependency array if used in error handling
+
+  // --- Unlock Logic ---
+  const handleUnlock = (folderId, correctPassword) => {
+    const enteredPassword = folderPasswords[folderId];
+    if (enteredPassword === correctPassword) {
+      setUnlockedFolders(prev => ({ ...prev, [folderId]: true }));
+      setFolderErrors(prev => ({ ...prev, [folderId]: null }));
+      // Optionally clear password input after success
+      // setFolderPasswords(prev => ({ ...prev, [folderId]: '' })); 
+    } else {
+      setFolderErrors(prev => ({ ...prev, [folderId]: 'Incorrect password.' }));
+    }
+    // Clear password input field regardless of success/fail for security/UX
+    setFolderPasswords(prev => ({ ...prev, [folderId]: '' })); 
+  };
 
   // --- Menu Items --- Updated with Ionicon names
   const menuItems = [
@@ -117,6 +243,28 @@ const GamePlayScreen = ({ route, navigation }) => {
           setSelectedImageSource(source);
           setModalVisible(true);
       }
+  };
+
+  // --- Function to handle file press (PDF linking or Dir alert) ---
+  const handleFilePress = async (item) => {
+    if (item.type === 'image' && item.path) {
+      setSelectedImageSource(item.path);
+      setModalVisible(true);
+    } else if (item.type === 'pdf' && item.path) {
+      const webFriendlyPath = `/${item.path}`; // Already prepending slash
+
+      if (Platform.OS === 'web') {
+        console.log('Opening PDF in web modal with path:', webFriendlyPath);
+        setCurrentPdfUri(webFriendlyPath);
+        setIsPdfModalVisible(true);
+      } else {
+        // Native platforms will navigate to PdfViewerScreen
+        console.log('Navigating to PdfViewerScreen (native) with path:', webFriendlyPath);
+        navigation.navigate('PdfViewer', { pdfPath: webFriendlyPath });
+      }
+    } else {
+      Alert.alert("File Type Error", "Cannot open this file type or path is missing.");
+    }
   };
 
   // Helper to get a default icon if no specific match
@@ -193,20 +341,39 @@ const GamePlayScreen = ({ route, navigation }) => {
                 <CollapsibleSection key={report.id} title={report.title}>
                   {imageSource && (
                     <TouchableOpacity onPress={() => openImageModal(imageSource)}>
-                      <Image source={imageSource} style={styles.evidenceImage} resizeMode="contain" />
+                    <Image source={imageSource} style={styles.evidenceImage} resizeMode="contain" />
                     </TouchableOpacity>
                   )}
                   {imageDetailSource && (
                     <TouchableOpacity onPress={() => openImageModal(imageDetailSource)}>
-                       <Image source={imageDetailSource} style={styles.evidenceDetailImage} resizeMode="contain" />
+                    <Image source={imageDetailSource} style={styles.evidenceDetailImage} resizeMode="contain" />
                     </TouchableOpacity>
                   )}
+                  
                   {Object.entries(report).map(([key, value]) => {
-                    if (key === 'id' || key === 'title' || !value || key === 'imageName' || key === 'imageDetailName' || key === 'imageSource' || key === 'imageDetailSource') return null;
+                    if (key === 'id' || key === 'title' || !value || 
+                        key === 'imageName' || key === 'imageDetailName' || key === 'imageSource' || 
+                        key === 'imageDetailSource' || key === 'lockedFolders') return null; 
+                    
+                    if (key === 'isLocked' || key === 'password' || key === 'unlockPrompt' || key === 'unlockedContent') return null;
+                    
                     const formattedKey = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
                     const icon = getIconForKey(key);
                     return <InfoBlock key={key} title={formattedKey} content={value.toString()} iconName={icon} />;
                   })}
+
+                  {report.lockedFolders?.map(folder => (
+                    <CollapsibleFolder
+                      key={folder.id}
+                      folder={folder} 
+                      isUnlocked={unlockedFolders[folder.id]}
+                      passwordValue={folderPasswords[folder.id]} 
+                      errorValue={folderErrors[folder.id]}
+                      onPasswordChange={text => setFolderPasswords(prev => ({ ...prev, [folder.id]: text }))}
+                      onUnlockPress={() => handleUnlock(folder.id, folder.password)}
+                      onFilePress={handleFilePress}
+                    />
+                  ))}
                 </CollapsibleSection>
               );
             }) || <Text style={styles.sectionText}>No evidence available.</Text>}
@@ -219,11 +386,11 @@ const GamePlayScreen = ({ route, navigation }) => {
              {caseData.interrogations?.map(int => {
                const characterImageSource = int.characterImageSource;
                return (
-                 <CollapsibleSection key={int.id} title={int.suspect}> 
+                 <CollapsibleSection key={int.id} title={int.suspect}>
                    <View style={styles.interrogationHeaderContainer}>
-                      {characterImageSource && (
-                        <Image source={characterImageSource} style={styles.characterImage} resizeMode="contain" />
-                      )}
+                   {characterImageSource && (
+                     <Image source={characterImageSource} style={styles.characterImage} resizeMode="contain" />
+                   )}
                       <Text style={styles.interrogationSuspectName}>{int.suspect}</Text>
                    </View>
                    
@@ -247,7 +414,7 @@ const GamePlayScreen = ({ route, navigation }) => {
          // Placeholder until new logic is added
         return (
           <ScrollView style={styles.contentScrollView} contentContainerStyle={{ padding: 15 }}>
-            <Text style={styles.contentTitle}>Autopsy Report</Text>
+             <Text style={styles.contentTitle}>Autopsy Report</Text>
             <Text style={styles.sectionText}>Autopsy Report rendering coming soon...</Text>
           </ScrollView>
         );
@@ -318,14 +485,42 @@ const GamePlayScreen = ({ route, navigation }) => {
         </View>
       </Modal>
 
+      {/* NEW: PDF Modal for Web */}
+      {Platform.OS === 'web' && (
+        <Modal
+          animationType="fade"
+          transparent={true}
+          visible={isPdfModalVisible}
+          onRequestClose={() => setIsPdfModalVisible(false)}
+        >
+          <View style={styles.pdfModalOverlay}>
+            <View style={styles.pdfModalContent}>
+              <TouchableOpacity
+                style={styles.pdfModalCloseButton}
+                onPress={() => setIsPdfModalVisible(false)}
+              >
+                <Ionicons name="close-circle" size={35} color="#fff" />
+              </TouchableOpacity>
+              {currentPdfUri && (
+                <iframe
+                  src={currentPdfUri}
+                  style={styles.iframeStyle}
+                  title="PDF Document"
+                />
+              )}
+            </View>
+          </View>
+        </Modal>
+      )}
+
       <View style={styles.container}>
           {/* Header with Back Button */}
           <View style={styles.header}>
-                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                    <Text style={styles.backArrow}>‹</Text>
-                 </TouchableOpacity>
-                 <Text style={styles.headerTitle}>{caseData?.title || 'Game Play'}</Text>
-                 <View style={{width: 40}} /> {/* Spacer for balance */}
+               <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                  <Text style={styles.backArrow}>‹</Text>
+               </TouchableOpacity>
+               <Text style={styles.headerTitle}>{caseData?.title || 'Game Play'}</Text>
+               <View style={{width: 40}} /> {/* Spacer for balance */}
           </View>
           {/* Horizontal Scrollable Menu */}
           <View style={styles.topMenuContainer}>
@@ -336,8 +531,8 @@ const GamePlayScreen = ({ route, navigation }) => {
                           style={[styles.topMenuItem, activeSectionKey === item.key && styles.activeTopMenuItem]}
                           onPress={() => setActiveSectionKey(item.key)}
                       >
-                          <Ionicons name={item.iconName} size={20} color={activeSectionKey === item.key ? '#ffffff' : '#e0e0e0'} style={styles.topMenuIcon}/>
-                          <Text style={[styles.topMenuItemText, activeSectionKey === item.key && styles.activeTopMenuItemText]}>{item.label}</Text>
+                        <Ionicons name={item.iconName} size={20} color={activeSectionKey === item.key ? '#ffffff' : '#e0e0e0'} style={styles.topMenuIcon}/>
+                        <Text style={[styles.topMenuItemText, activeSectionKey === item.key && styles.activeTopMenuItemText]}>{item.label}</Text>
                       </TouchableOpacity>
                   ))}
               </ScrollView>
@@ -448,11 +643,11 @@ const styles = StyleSheet.create({
   // Styles for specific content types
   infoBlockContainer: {
       flexDirection: 'row',
-      backgroundColor: 'rgba(255, 255, 255, 0.08)',
-      paddingHorizontal: 15,
-      paddingVertical: 12,
-      borderRadius: 8,
-      marginBottom: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginBottom: 12,
       alignItems: 'flex-start', // Align icon and text block top
   },
   infoBlockIcon: {
@@ -662,6 +857,200 @@ const styles = StyleSheet.create({
   },
   autopsyContentContainer: {
       backgroundColor: '#e0f2f7', // Light clinical blue/grey
+  },
+  folderContainer: {
+    marginTop: 15,
+    marginBottom: 10,
+    padding: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 8,
+  },
+  folderTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#FFD700',
+    marginBottom: 10,
+  },
+  unlockedContentContainer: {
+  },
+  fileItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8, // Adjusted padding slightly 
+    paddingHorizontal: 10, // Adjusted padding slightly
+    backgroundColor: 'rgba(255, 255, 255, 0.03)', // Slightly adjusted background
+    marginBottom: 5, // Keep spacing
+    borderRadius: 5, // Slightly more rounded corners
+    borderWidth: 1, // Add a border
+    borderColor: 'rgba(255, 255, 255, 0.15)', // Subtle border color
+  },
+  fileIcon: {
+    marginRight: 10,
+  },
+  fileName: {
+    fontSize: 14,
+    color: '#E0E0E0',
+    flexShrink: 1,
+  },
+  lockPromptContainer: {
+  },
+  lockPromptText: {
+    fontSize: 14,
+    color: '#A9A9A9',
+    marginBottom: 10,
+  },
+  passwordInput: {
+    backgroundColor: '#333',
+    color: '#FFF',
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    marginBottom: 10,
+    fontSize: 14,
+    borderWidth: 1,
+    borderColor: '#555',
+  },
+  unlockButton: {
+    backgroundColor: '#FFD700',
+    paddingVertical: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  unlockButtonText: {
+    color: '#1c1c1e',
+    fontSize: 15,
+    fontWeight: 'bold',
+  },
+  errorText: {
+    color: '#FF6B6B',
+    fontSize: 13,
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  // Folder Styles (CollapsibleFolder)
+  folderContainer: { // Overall container for a collapsible folder
+    backgroundColor: 'rgba(255, 255, 255, 0.05)', // Slightly distinct background
+    borderRadius: 6,
+    marginBottom: 10, // Space between folders
+    marginTop: 10, // Space from main content
+    overflow: 'hidden', // Ensures content clips to rounded corners
+  },
+  collapsibleFolderHeader: { // Header row (clickable part)
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)', // Header background
+  },
+  folderLockIcon: {
+      marginRight: 8,
+  },
+  folderTitleText: { // Title text within the header
+    fontSize: 15, // Slightly smaller than main section titles
+    fontWeight: 'bold',
+    color: '#E0E0E0', // Light color for title
+    flex: 1, // Take up available space
+    marginRight: 10,
+  },
+  collapsibleFolderIcon: { // Collapse/expand icon (▼/▲)
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: '#FFD700', // Accent color
+  },
+  collapsibleFolderContent: { // Container for content when expanded
+    padding: 12,
+    paddingTop: 8, // Less padding top as header has padding bottom
+  },
+  
+  // Styles for Unlocked Content (within CollapsibleFolder)
+  unlockedContentContainer: {
+    // No specific styles needed now, fileItem styles handle individual items
+  },
+  fileItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8, // Adjusted padding slightly 
+    paddingHorizontal: 10, // Adjusted padding slightly
+    backgroundColor: 'rgba(255, 255, 255, 0.03)', // Slightly adjusted background
+    marginBottom: 5, // Keep spacing
+    borderRadius: 5, // Slightly more rounded corners
+    borderWidth: 1, // Add a border
+    borderColor: 'rgba(255, 255, 255, 0.15)', // Subtle border color
+  },
+  fileIcon: {
+    marginRight: 10,
+  },
+  fileName: {
+    fontSize: 14,
+    color: '#C0C0C0', // Slightly dimmer text for files
+    flexShrink: 1,
+  },
+
+  // Styles for Lock Prompt (within CollapsibleFolder)
+  lockPromptContainer: {
+    // No specific container styles needed now
+  },
+  lockPromptText: {
+    fontSize: 14,
+    color: '#A9A9A9',
+    marginBottom: 10,
+  },
+  passwordInput: {
+    backgroundColor: '#333',
+    color: '#FFF',
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    marginBottom: 10,
+    fontSize: 14,
+    borderWidth: 1,
+    borderColor: '#555',
+  },
+  unlockButton: {
+    backgroundColor: '#FFD700',
+    paddingVertical: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  unlockButtonText: {
+    color: '#1c1c1e',
+    fontSize: 15,
+    fontWeight: 'bold',
+  },
+  errorText: {
+    color: '#FF6B6B',
+    fontSize: 13,
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  pdfModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)', // Darker overlay
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20, // Give some padding so modal doesn't touch screen edges
+  },
+  pdfModalContent: {
+    backgroundColor: '#f0f0f0', // Light grey background for the modal content area
+    borderRadius: 8,
+    width: '90%', // Modal width
+    height: '90%', // Modal height
+    overflow: 'hidden', // Ensure iframe corners are rounded if iframe itself isn't
+    position: 'relative', // For absolute positioning of the close button within this
+  },
+  pdfModalCloseButton: { // Specific style if different from image modal's close
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    zIndex: 20, // Ensure it's above the iframe
+    padding: 5,
+    backgroundColor: '#000', // Black background
+    borderRadius: 18, // Adjust to keep it circular with padding
+  },
+  iframeStyle: {
+    width: '100%',
+    height: '100%',
+    borderWidth: 0, // Remove iframe border
   },
 });
 

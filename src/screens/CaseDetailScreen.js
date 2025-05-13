@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Platform, SafeAreaView, Dimensions } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Platform, SafeAreaView, Dimensions, Alert } from 'react-native';
 
 // Import specific case data
 import { deadAirCaseData } from '../data/deadAirData.js';
@@ -56,6 +56,7 @@ const { height: screenHeight } = Dimensions.get('window'); // Get screen height
 
 const CaseDetailScreen = ({ route, navigation }) => {
   const { caseId } = route.params;
+  const [showSummary, setShowSummary] = useState(false);
   
   let caseDetails;
   let imageSource;
@@ -100,6 +101,11 @@ const CaseDetailScreen = ({ route, navigation }) => {
     );
   }
 
+  const handleViewSummary = () => {
+    console.log('handleViewSummary called');
+    setShowSummary(!showSummary);
+  };
+
   const handleAction = () => {
     if (caseDetails.status === 'Available') {
       if (caseDetails.price === 'Free') {
@@ -125,27 +131,41 @@ const CaseDetailScreen = ({ route, navigation }) => {
 
   return (
     <SafeAreaView style={styles.safeAreaFullHeight}>
-      <ScrollView style={styles.scrollContainer} bounces={false} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={styles.scrollContainer} 
+        contentContainerStyle={styles.scrollContentContainer}
+        bounces={false} 
+        showsVerticalScrollIndicator={false}
+      >
           {imageSource ? (
-              <Image source={imageSource} style={styles.caseImageActual} resizeMode="cover" />
+              <Image source={imageSource} style={styles.caseImageActual} resizeMode="contain" />
           ) : (
               <View style={styles.imagePlaceholder}>
                   <Text style={styles.imagePlaceholderText}>{displayTitle}</Text>
               </View>
           )}
-        <View style={styles.detailsContainer}>
-          <Text style={styles.title}>{displayTitle}</Text>
-          <Text style={styles.description}>{displayDescription}</Text>
-          
-          <TouchableOpacity 
-            style={[styles.actionButton, buttonDisabled && styles.disabledButton]}
-            onPress={handleAction}
-            disabled={buttonDisabled}
-          >
-            <Text style={styles.actionButtonText}>{buttonText}</Text>
-          </TouchableOpacity>
-        </View>
       </ScrollView>
+      <View style={styles.detailsContainer}>
+        <Text style={styles.title}>{displayTitle}</Text>
+        <TouchableOpacity 
+          style={styles.summaryButton}
+          onPress={handleViewSummary}
+        >
+          <Text style={styles.summaryButtonText}>{showSummary ? 'Hide Summary' : 'View Summary'}</Text>
+        </TouchableOpacity>
+        
+        {showSummary && (
+          <Text style={styles.description}>{displayDescription}</Text>
+        )}
+        
+        <TouchableOpacity 
+          style={[styles.actionButton, buttonDisabled && styles.disabledButton]}
+          onPress={handleAction}
+          disabled={buttonDisabled}
+        >
+          <Text style={styles.actionButtonText}>{buttonText}</Text>
+        </TouchableOpacity>
+      </View>
       {/* Custom Header Overlay */}
       <View style={styles.customHeaderOverlay}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.customHeaderBackButton}>
@@ -160,10 +180,15 @@ const styles = StyleSheet.create({
   safeAreaFullHeight: { 
     flex: 1,
     backgroundColor: '#1c1c1e', // Changed to dark background
+    justifyContent: 'space-between', // Push image scroll to top, details to bottom
   },
   scrollContainer: { // Renamed from container to avoid confusion
-    flex: 1,
+    // flex: 1, // Removed flex: 1 so it doesn't fight with detailsContainer
     // backgroundColor: '#ffffff', // Removed, inherits from safeArea or shows image
+  },
+  scrollContentContainer: { // Added for centering image if needed
+    flexGrow: 1,
+    justifyContent: 'center',
   },
   containerCenter: { 
     flex: 1,
@@ -216,17 +241,13 @@ const styles = StyleSheet.create({
   },
   caseImageActual: {
      width: '100%',
-     height: screenHeight * 0.45, // Set height to 45% of screen height
-     // aspectRatio: 0.5625, // aspectRatio is overridden by explicit height
+     height: screenHeight * 0.65, // Increased height to 65% of screen height
+     backgroundColor: '#000', // Added a background color for letterboxing if image is not full aspect ratio
   },
   detailsContainer: {
     padding: 20,
-    paddingTop: 25, 
-    backgroundColor: 'rgba(25, 25, 27, 0.9)', // Changed to semi-transparent dark
-    marginTop: -30, 
-    borderTopLeftRadius: 30, 
-    borderTopRightRadius: 30,
-    minHeight: screenHeight * 0.60, // Ensure details take up at least 60% of screen height
+    paddingBottom: Platform.OS === 'ios' ? 30 : 20, // Add padding at the bottom, more for iOS notch/home indicator
+    backgroundColor: 'transparent', // Make the container background transparent
   },
   title: {
     fontSize: 28,
@@ -240,7 +261,20 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     textAlign: 'justify',
     marginBottom: 25,
-    color: '#e0e0e0', // Changed to light color
+    color: '#e0e0e0',
+  },
+  summaryButton: {
+    backgroundColor: '#333333',
+    paddingVertical: 12,
+    paddingHorizontal: 25,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  summaryButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
   },
   actionButton: {
     backgroundColor: '#5D3FD3',
