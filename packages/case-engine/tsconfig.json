@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ES2017",            // Changed from ES2020 to ES2017
+    "module": "commonjs",          // Compatible with Node.js and many bundlers
+    "lib": ["ES2017"],           // Changed from ES2020 to ES2017
+    "declaration": true,          // Generate .d.ts files (for types)
+    "outDir": "./dist",           // Output directory for compiled files
+    "rootDir": "./src",           // Source directory for .ts files
+    "strict": true,               // Enable all strict type-checking options
+    "esModuleInterop": true,      // Enables compatibility with CommonJS modules
+    "skipLibCheck": true,         // Skip type checking of declaration files
+    "forceConsistentCasingInFileNames": true, // Disallow inconsistently-cased references to the same file.
+    "moduleResolution": "node",   // How modules get resolved (classic or node)
+    "resolveJsonModule": true,    // Allows importing .json files
+    "isolatedModules": true,      // Ensures every file can be compiled independently
+    "noEmit": false               // We do want to emit files (JS and .d.ts)
+  },
+  "include": ["src/**/*"],      // Which files to include in compilation
+  "exclude": ["node_modules", "dist"] // Which files/folders to exclude
+} 

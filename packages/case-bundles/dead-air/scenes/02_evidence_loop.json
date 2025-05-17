@@ -1,0 +1,17 @@
+{
+  "sceneTitle": "Evidence Board",
+  "layout": "split",
+  "widgets": [
+    {
+      "type": "image",
+      "src": "assets/images/studio_photo.jpg",
+      "caption": "Studio B – initial crime-scene shot (Placeholder Image)"
+    },
+    {
+      "type": "document_viewer",
+      "src": "assets/pdfs/dead_air_evidence_reports.pdf#page=2-8",
+      "caption": "Evidence Reports (Placeholder PDF Reference)"
+    }
+  ],
+  "prompt": "Review the available evidence. The frequency list seems particularly odd."
+} 

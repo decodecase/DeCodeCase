@@ -1,0 +1,21 @@
+{
+  "name": "@decodecase/case-engine",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Core rules engine for Decodecase mysteries.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "decodecase",
+    "engine"
+  ],
+  "author": "",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "typescript": "^5.0.0" 
+  }
+} 

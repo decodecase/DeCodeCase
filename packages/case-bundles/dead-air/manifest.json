@@ -1,0 +1,33 @@
+{
+  "initialSceneId": "intro",
+  "scenes": [
+    {
+      "id": "intro",
+      "title": "Case Introduction",
+      "file": "scenes/00_intro.md"
+    },
+    {
+      "id": "crime_scene",
+      "title": "The Crime Scene",
+      "file": "scenes/01_crime_scene.md",
+      "unlock": {
+        "after": "intro"
+      }
+    },
+    {
+      "id": "evidence_loop",
+      "title": "Evidence Review",
+      "file": "scenes/02_evidence_loop.json",
+      "unlock": {
+        "after": "crime_scene",
+        "puzzle": "freq_cipher"
+      },
+      "objectives": [
+        "Examine all seven evidence reports."
+      ],
+      "puzzles_required_to_exit": [
+        "freq_cipher"
+      ]
+    }
+  ]
+} 
