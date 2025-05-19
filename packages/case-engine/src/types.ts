@@ -80,6 +80,27 @@ export interface CaseBundle {
   assets?: Record<string, string>; // Added for mock bundle
 }
 
+// === New Types for Computer Interface Scenes ===
+export interface ComputerFileReference {
+  name: string;         // Filename e.g., "11-03-2025.pdf"
+  path: string;         // Direct path to the asset e.g., "assets/computer_files/onur/02-03-2025.pdf"
+  fileType: 'pdf' | 'audio' | 'text' | 'image'; // To help UI render an appropriate icon or viewer
+}
+
+export interface ComputerFolder {
+  name: string;
+  password?: string;    // Optional password for the folder
+  files: ComputerFileReference[];
+  subFolders?: ComputerFolder[]; // For potential future nested folders - type should be ComputerFolder[]
+}
+
+export interface ComputerInterfaceData {
+  initialPassword?: string; // Password to "unlock" the computer itself
+  desktopBackgroundImage?: string; // Optional path to a desktop background image
+  folders: ComputerFolder[];
+}
+// === End of New Types for Computer Interface Scenes ===
+
 export interface CaseManifest {
   initialSceneId?: string; // Optional: if not specified, could default to the first in the scenes array
   scenes: SceneDefinition[];
@@ -88,8 +109,9 @@ export interface CaseManifest {
 
 export interface SceneDefinition {
   id: string;
-  file: string; // Path to scene file (e.g., .md for text, .json for structured content)
+  file?: string; // Path to scene file (e.g., .md, .json, or asset like .pdf, .png). Optional if computerInterface is defined.
   title?: string; // Display title for the scene
+  documentType?: string; // Added for UI hints based on document category
   unlock?: UnlockCondition;
   // For JSON-defined scenes (as per your example scenes/02_evidence_loop.json)
   layout?: string; // e.g., 'split', 'single-column'
@@ -97,6 +119,7 @@ export interface SceneDefinition {
   objectives?: (string | { id: string; text: string; initiallyActive?: boolean })[];
   puzzles_required_to_exit?: string[]; // IDs of puzzles that must be solved to 'complete' this scene
   actions?: SceneAction[]; // e.g., buttons within a scene
+  computerInterface?: ComputerInterfaceData; // New field for computer interface scenes
 }
 
 export interface SceneWidget {

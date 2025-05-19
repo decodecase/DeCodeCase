@@ -10,7 +10,7 @@ import AuthScreen from '../screens/AuthScreen';
 import HomeScreen from '../screens/HomeScreen';
 import CaseDetailScreen from '../screens/CaseDetailScreen';
 import CheckoutScreen from '../screens/CheckoutScreen';
-import GamePlayScreen from '../screens/GamePlayScreen';
+// import GamePlayScreen from '../screens/GamePlayScreen';
 import PdfViewerScreen from '../screens/PdfViewerScreen';
 
 // Placeholder screens for bottom tabs
@@ -65,7 +65,7 @@ const AppNavigator = () => {
       <Stack.Screen name="HomeTabs" component={HomeTabs} /> 
       <Stack.Screen name="CaseDetail" component={CaseDetailScreen} />
       <Stack.Screen name="Checkout" component={CheckoutScreen} />
-      <Stack.Screen name="GamePlay" component={GamePlayScreen} />
+      {/* <Stack.Screen name="GamePlay" component={GamePlayScreen} /> */}
       <Stack.Screen
         name="PdfViewer"
         component={PdfViewerScreen}

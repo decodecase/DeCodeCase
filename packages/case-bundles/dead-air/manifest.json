@@ -1,33 +1,258 @@
 {
-  "initialSceneId": "intro",
+  "initialSceneId": "crime_report_scene",
   "scenes": [
     {
-      "id": "intro",
-      "title": "Case Introduction",
-      "file": "scenes/00_intro.md"
+      "id": "crime_report_scene",
+      "title": "Crime Scene Report",
+      "file": "scenes/00_crime_report.md"
     },
     {
-      "id": "crime_scene",
-      "title": "The Crime Scene",
-      "file": "scenes/01_crime_scene.md",
-      "unlock": {
-        "after": "intro"
-      }
+      "id": "crime_report_doc",
+      "title": "Crime Scene Report",
+      "file": "evidence_files/00_crime_report_detailed.md",
+      "documentType": "Crime Scene Report"
     },
     {
-      "id": "evidence_loop",
-      "title": "Evidence Review",
-      "file": "scenes/02_evidence_loop.json",
-      "unlock": {
-        "after": "crime_scene",
-        "puzzle": "freq_cipher"
-      },
-      "objectives": [
-        "Examine all seven evidence reports."
-      ],
-      "puzzles_required_to_exit": [
-        "freq_cipher"
+      "id": "autopsy_report",
+      "title": "Forensic Autopsy Report",
+      "file": "evidence_files/08_autopsy_report_full.md",
+      "documentType": "Forensic Autopsy Report"
+    },
+    {
+      "id": "witness_interview_cihan",
+      "title": "Witness Interview: Cihan Karakaş",
+      "file": "evidence_files/interview_cihan.md",
+      "documentType": "Interview",
+      "widgets": [
+        { "type": "image", "src": "assets/images/characters/cihan.png" }
       ]
+    },
+    {
+      "id": "rakun11_folder_content",
+      "title": "RAKUN-11 Folder Contents (Locked)",
+      "file": "evidence_files/09_rakun11_content.md",
+      "documentType": "Locked Content",
+      "unlock": { "puzzle": "rakun11_password" }
+    },
+    {
+      "id": "surveillance_cafe",
+      "title": "Evidence Report #1 - Surveillance (Café)",
+      "file": "evidence_files/01_surveillance_cafe.md",
+      "documentType": "Evidence Report",
+      "widgets": [
+        { "type": "image", "src": "assets/images/evidence/cam_surveillance.png" }
+      ]
+    },
+    {
+      "id": "frequency_list",
+      "title": "Evidence Report #2 - Frequency List",
+      "file": "evidence_files/02_frequency_list.md",
+      "documentType": "Evidence Report",
+      "widgets": [
+        { "type": "image", "src": "assets/images/evidence/frequency_list.png" }
+      ]
+    },
+    {
+      "id": "rakun11_note",
+      "title": "Evidence Report #3 - Note 'RAKUN11'",
+      "file": "evidence_files/03_rakun11_note.md",
+      "documentType": "Evidence Report",
+      "widgets": [
+        { "type": "image", "src": "assets/images/evidence/rakun11_note.png" }
+      ]
+    },
+    {
+      "id": "selin_handwritten_note",
+      "title": "Evidence Report #4 - Handwritten Note (Selin)",
+      "file": "evidence_files/04_selin_handwritten_note.md",
+      "documentType": "Evidence Report",
+      "widgets": [
+        { "type": "image", "src": "assets/images/evidence/selin_dropped_note.png" }
+      ]
+    },
+    {
+      "id": "torn_photo",
+      "title": "Evidence Report #5 - Torn Family Photograph",
+      "file": "evidence_files/05_torn_photo.md",
+      "documentType": "Evidence Report",
+      "widgets": [
+        { "type": "image", "src": "assets/images/evidence/onur_bedroom_photo.png" },
+        { "type": "image", "src": "assets/images/evidence/i_am_becoming_him.png" }
+      ]
+    },
+    {
+      "id": "album_covers_wall",
+      "title": "Evidence Report #6 - Framed Album Covers Wall",
+      "file": "evidence_files/06_album_covers_wall.md",
+      "documentType": "Evidence Report",
+      "widgets": [
+        { "type": "image", "src": "assets/images/evidence/onur_album_wall.png" }
+      ]
+    },
+    {
+      "id": "bookshelf_certs_wall",
+      "title": "Evidence Report #7 - Bookshelf & Certificates",
+      "file": "evidence_files/07_bookshelf_certs_wall.md",
+      "documentType": "Evidence Report",
+      "widgets": [
+        { "type": "image", "src": "assets/images/evidence/onur_books_certificates.png" }
+      ]
+    },
+    {
+      "id": "interview_beril",
+      "title": "Witness Interview: Beril Yaman",
+      "file": "evidence_files/interview_beril.md",
+      "documentType": "Interview",
+      "widgets": [
+        { "type": "image", "src": "assets/images/characters/beril.png" }
+      ]
+    },
+    {
+      "id": "interview_selin",
+      "title": "Witness Interview: Selin Aydın",
+      "file": "evidence_files/interview_selin.md",
+      "documentType": "Interview",
+      "widgets": [
+        { "type": "image", "src": "assets/images/characters/selin.png" }
+      ]
+    },
+    {
+      "id": "interview_suheyla",
+      "title": "Witness Interview: Süheyla Bora",
+      "file": "evidence_files/interview_suheyla.md",
+      "documentType": "Interview",
+      "widgets": [
+        { "type": "image", "src": "assets/images/characters/suheyla.png" }
+      ]
+    },
+    {
+      "id": "interview_mine",
+      "title": "Witness Interview: Mine Taşdemir",
+      "file": "evidence_files/interview_mine.md",
+      "documentType": "Interview",
+      "widgets": [
+        { "type": "image", "src": "assets/images/characters/mine.png" }
+      ]
+    },
+    {
+      "id": "interview_murat",
+      "title": "Witness Interview: Murat Kaya",
+      "file": "evidence_files/interview_murat.md",
+      "documentType": "Interview",
+      "widgets": [
+        { "type": "image", "src": "assets/images/characters/murat.png" }
+      ]
+    },
+    {
+      "id": "interview_haluk",
+      "title": "Witness Interview: Haluk Sezgin",
+      "file": "evidence_files/interview_haluk.md",
+      "documentType": "Interview",
+      "widgets": [
+        { "type": "image", "src": "assets/images/characters/haluk.png" }
+      ]
+    },
+    {
+      "id": "interview_levent",
+      "title": "Witness Interview: Levent Ertuğrul",
+      "file": "evidence_files/interview_levent.md",
+      "documentType": "Interview",
+      "widgets": [
+        { "type": "image", "src": "assets/images/characters/levent.png" }
+      ]
+    },
+    {
+      "id": "tech_analysis_report",
+      "title": "Technical Analysis Report",
+      "file": "evidence_files/12_tech_analysis_report.md",
+      "documentType": "Technical Analysis Report"
+    },
+    {
+      "id": "onur_pc_report",
+      "title": "Evidence #11 - Onur Aydın's Personal Computer",
+      "widgets": [
+        { "type": "image", "src": "assets/images/evidence/onur_computer.png" }
+      ],
+      "computerInterface": {
+        "initialPassword": "ONAIR",
+        "desktopBackgroundImage": "assets/images/evidence/onur_computer_desktop_bg.png",
+        "folders": [
+          {
+            "name": "Onur",
+            "password": "IAMBECOMINGHIM",
+            "files": [
+              { "name": "02-03-2025.pdf", "path": "assets/computer_files/onur/02-03-2025.pdf", "fileType": "pdf" },
+              { "name": "03-03-2025.pdf", "path": "assets/computer_files/onur/03-03-2025.pdf", "fileType": "pdf" },
+              { "name": "04-03-2025.pdf", "path": "assets/computer_files/onur/04-03-2025.pdf", "fileType": "pdf" },
+              { "name": "05-03-2025.pdf", "path": "assets/computer_files/onur/05-03-2025.pdf", "fileType": "pdf" },
+              { "name": "06-03-2025.pdf", "path": "assets/computer_files/onur/06-03-2025.pdf", "fileType": "pdf" },
+              { "name": "07-03-2025.pdf", "path": "assets/computer_files/onur/07-03-2025.pdf", "fileType": "pdf" },
+              { "name": "08-03-2025.pdf", "path": "assets/computer_files/onur/08-03-2025.pdf", "fileType": "pdf" },
+              { "name": "09-03-2025.pdf", "path": "assets/computer_files/onur/09-03-2025.pdf", "fileType": "pdf" },
+              { "name": "10-03-2025.pdf", "path": "assets/computer_files/onur/10-03-2025.pdf", "fileType": "pdf" },
+              { "name": "11-03-2025.pdf", "path": "assets/computer_files/onur/11-03-2025.pdf", "fileType": "pdf" }
+            ]
+          },
+          {
+            "name": "Podcast",
+            "password": "GHEL",
+            "files": [
+              { "name": "Behind Our Eyes.pdf", "path": "assets/computer_files/podcast/Behind Our Eyes.pdf", "fileType": "pdf" },
+              { "name": "Echo Without a Voice.pdf", "path": "assets/computer_files/podcast/Echo Without a Voice.pdf", "fileType": "pdf" },
+              { "name": "The Man in the Fourth Row.pdf", "path": "assets/computer_files/podcast/The Man in the Fourth Row.pdf", "fileType": "pdf" },
+              { "name": "The One Who Wasn't There.pdf", "path": "assets/computer_files/podcast/The One Who Wasn't There.pdf", "fileType": "pdf" },
+              { "name": "What She Never Said.pdf", "path": "assets/computer_files/podcast/What She Never Said.pdf", "fileType": "pdf" }
+            ]
+          },
+          {
+            "name": "RAKUN-11",
+            "password": "739167",
+            "files": [],
+            "subFolders": [
+              {
+                "name": "R-1",
+                "files": [
+                  { "name": "01.12.2017.pdf", "path": "assets/computer_files/rakun-11/R-1/01.12.2017.pdf", "fileType": "pdf" },
+                  { "name": "08.11.2017.pdf", "path": "assets/computer_files/rakun-11/R-1/08.11.2017.pdf", "fileType": "pdf" },
+                  { "name": "08.12.2017.pdf", "path": "assets/computer_files/rakun-11/R-1/08.12.2017.pdf", "fileType": "pdf" },
+                  { "name": "17.11.2017.pdf", "path": "assets/computer_files/rakun-11/R-1/17.11.2017.pdf", "fileType": "pdf" },
+                  { "name": "21.12.2017.pdf", "path": "assets/computer_files/rakun-11/R-1/21.12.2017.pdf", "fileType": "pdf" }
+                ]
+              },
+              {
+                "name": "R-2",
+                "files": [
+                  { "name": "02.03.2023.pdf", "path": "assets/computer_files/rakun-11/R-2/02.03.2023.pdf", "fileType": "pdf" },
+                  { "name": "03.02.2023.pdf", "path": "assets/computer_files/rakun-11/R-2/03.02.2023.pdf", "fileType": "pdf" },
+                  { "name": "18.02.2023.pdf", "path": "assets/computer_files/rakun-11/R-2/18.02.2023.pdf", "fileType": "pdf" },
+                  { "name": "21.02.2023.pdf", "path": "assets/computer_files/rakun-11/R-2/21.02.2023.pdf", "fileType": "pdf" },
+                  { "name": "24.02.2023.pdf", "path": "assets/computer_files/rakun-11/R-2/24.02.2023.pdf", "fileType": "pdf" },
+                  { "name": "28.02.2023.pdf", "path": "assets/computer_files/rakun-11/R-2/28.02.2023.pdf", "fileType": "pdf" }
+                ]
+              },
+              {
+                "name": "R-3",
+                "files": [
+                  { "name": "02.02.2023.pdf", "path": "assets/computer_files/rakun-11/R-3/02.02.2023.pdf", "fileType": "pdf" },
+                  { "name": "07.02.2023.pdf", "path": "assets/computer_files/rakun-11/R-3/07.02.2023.pdf", "fileType": "pdf" },
+                  { "name": "10.02.2023.pdf", "path": "assets/computer_files/rakun-11/R-3/10.02.2023.pdf", "fileType": "pdf" },
+                  { "name": "14.02.2023.pdf", "path": "assets/computer_files/rakun-11/R-3/14.02.2023.pdf", "fileType": "pdf" }
+                ]
+              },
+              {
+                "name": "R-4",
+                "files": [
+                  { "name": "01.04.2023.pdf", "path": "assets/computer_files/rakun-11/R-4/01.04.2023.pdf", "fileType": "pdf" },
+                  { "name": "04.04.2023.pdf", "path": "assets/computer_files/rakun-11/R-4/04.04.2023.pdf", "fileType": "pdf" },
+                  { "name": "07.04.2023.pdf", "path": "assets/computer_files/rakun-11/R-4/07.04.2023.pdf", "fileType": "pdf" },
+                  { "name": "10.04.2023.pdf", "path": "assets/computer_files/rakun-11/R-4/10.04.2023.pdf", "fileType": "pdf" },
+                  { "name": "12.04.2023.pdf", "path": "assets/computer_files/rakun-11/R-4/12.04.2023.pdf", "fileType": "pdf" }
+                ]
+              }
+            ]
+          }
+        ]
+      }
     }
   ]
 } 

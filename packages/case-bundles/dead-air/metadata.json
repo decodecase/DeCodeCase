@@ -1,8 +1,11 @@
 {
   "id": "dead-air",
   "title": "Dead Air",
-  "tagline": "Silence can kill.",
+  "tagline": "Can you solve the mystery before the signal fades?",
   "version": "1.0.0",
-  "duration_estimate_min": "90-120",
-  "cover": "assets/images/cover.jpg"
+  "description": "A thrilling mystery case where you need to uncover the truth behind a strange broadcast.",
+  "cover": "assets/images/dead-air-cover.png",
+  "author": "Your Name/Studio",
+  "genre": ["Mystery", "Detective"],
+  "duration_estimate_min": "2-4 hours"
 } 

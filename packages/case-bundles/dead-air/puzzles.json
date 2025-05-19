@@ -1,0 +1,20 @@
+[
+  {
+    "id": "rakun11_password",
+    "type": "text_input",
+    "prompt": "Enter the password for the RAKUN-11 folder.",
+    "solution": "SHADOW"
+  },
+  {
+    "id": "onur_pc_login",
+    "type": "text_input",
+    "prompt": "Enter Onur Aydin's computer login password.",
+    "solution": "ONAIR"
+  },
+  {
+    "id": "onur_folder_password",
+    "type": "text_input",
+    "prompt": "Enter the password for Onur Aydin's secure folder.",
+    "solution": "IAMBECOMINGHIM"
+  }
+] 

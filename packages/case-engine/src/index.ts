@@ -1,13 +1,3 @@
-/**
- * A placeholder function for the case engine.
- */
-export function getEngineName(): string {
-  return "DecodeCase Engine v0.1";
-}
-
-// We will define the CaseEngine class and related types here later.
-console.log("Case Engine Loaded (Placeholder)");
-
 import {
   CaseBundle,
   EngineAction,
@@ -22,7 +12,8 @@ import {
   GameCompletedPayload,
   StateChangedPayload,
   CaseManifest,
-  PuzzleDefinition
+  PuzzleDefinition,
+  SceneDefinition
 } from './types';
 
 // Interface to map event names to their payload types
@@ -250,7 +241,7 @@ export class CaseEngine {
     if (handlers) {
       handlers.forEach(handler => {
         try {
-          (handler as (p: EventPayloadMap[K]) => void)(payload);
+          handler(payload);
         } catch (error) {
           console.error(`Error in event handler for ${eventName}:`, error);
         }
@@ -259,231 +250,82 @@ export class CaseEngine {
   }
 
   private emitStateChange(): void {
-    const statePayload: StateChangedPayload = { newState: this.state }; 
-    this.emit('STATE_CHANGED', statePayload);
+    const newState = this.state; // Get a deep copy
+    this.emit('STATE_CHANGED', { newState });
   }
 
-  // Basic internal scene opening logic
   private openSceneInternal(sceneId: string, checkUnlock: boolean = true): void {
     if (!this.currentBundle) {
-        console.error("Cannot open scene: No case bundle loaded.");
-        return;
+      console.error("Cannot open scene: No case bundle loaded.");
+      return;
     }
     const sceneDef = this.currentBundle.manifest.scenes.find(s => s.id === sceneId);
     if (!sceneDef) {
-        console.error(`Scene with id '${sceneId}' not found in manifest.`);
-        return;
+      console.error(`Scene with id '${sceneId}' not found in manifest.`);
+      return;
     }
 
-    if (checkUnlock) {
-      const unlockConditions = sceneDef.unlock;
-      let isLocked = false;
-      let lockReason = "Scene does not meet unlock criteria:";
+    if (checkUnlock && sceneDef.unlock) {
+      const { after, puzzle, objective, all_puzzles_solved } = sceneDef.unlock;
+      let canUnlock = true;
 
-      if (unlockConditions) {
-        // Assume all defined conditions must be met (AND logic)
-        if (unlockConditions.after) {
-          if (!this.currentState.unlockedSceneIds.has(unlockConditions.after)) {
-            isLocked = true;
-            lockReason += ` Previous scene '${unlockConditions.after}' not completed.`;
-          }
+      if (after && !this.currentState.unlockedSceneIds.has(after)) {
+        // For 'after', we might need a concept of 'completed' scenes, not just 'unlocked'.
+        // For now, 'unlocked' implies visited/completed for simplicity.
+        console.log(`Scene '${sceneId}' locked: Scene '${after}' not yet visited/completed.`);
+        canUnlock = false;
+      }
+      if (puzzle && !this.currentState.solvedPuzzleIds.has(puzzle)) {
+        console.log(`Scene '${sceneId}' locked: Puzzle '${puzzle}' not solved.`);
+        canUnlock = false;
+      }
+      if (objective && !this.currentState.completedObjectives.has(objective)) {
+        console.log(`Scene '${sceneId}' locked: Objective '${objective}' not completed.`);
+        canUnlock = false;
+      }
+      if (all_puzzles_solved) {
+        const totalPuzzlesInBundle = this.currentBundle.puzzles?.length || 0;
+        if (this.currentState.solvedPuzzleIds.size < totalPuzzlesInBundle) {
+          console.log(`Scene '${sceneId}' locked: Not all puzzles in the bundle are solved yet.`);
+          canUnlock = false;
+        } else if (totalPuzzlesInBundle === 0) {
+            console.log(`Scene '${sceneId}' unlock condition 'all_puzzles_solved' met (no puzzles in bundle).`);
+        } else {
+            console.log(`Scene '${sceneId}' unlock condition 'all_puzzles_solved' met.`);
         }
-        if (unlockConditions.puzzle) {
-          if (!this.currentState.solvedPuzzleIds.has(unlockConditions.puzzle)) {
-            isLocked = true;
-            lockReason += ` Puzzle '${unlockConditions.puzzle}' not solved.`;
-          }
-        }
-        if (unlockConditions.objective) {
-          if (!this.currentState.completedObjectives.has(unlockConditions.objective)) {
-            isLocked = true;
-            lockReason += ` Objective '${unlockConditions.objective}' not completed.`;
-          }
-        }
-        if (unlockConditions.all_puzzles_solved) {
-          const allPuzzlesInCase = this.currentBundle.puzzles?.map(p => p.id) || [];
-          if (allPuzzlesInCase.length === 0 && this.currentBundle.puzzles) {
-            // If puzzles array exists but is empty, this condition might be vacuously true or misconfigured.
-            console.warn(`'all_puzzles_solved' condition for scene '${sceneId}' but no puzzles defined in the bundle.`);
-          } else {
-            const allSolved = allPuzzlesInCase.every(puzzleId => this.currentState.solvedPuzzleIds.has(puzzleId));
-            if (!allSolved) {
-              isLocked = true;
-              lockReason += ` Not all puzzles in the case are solved.`;
-            }
-          }
-        }
-      } else {
-        // If no unlock conditions are specified, the scene is considered unlocked by default
-        // (unless it's the very first scene being opened by load(), where checkUnlock is false)
-        // No action needed here, isLocked remains false.
       }
       
-      if (isLocked) {
-        console.warn(lockReason);
-        // Optionally, you could emit an event here like 'SCENE_ACCESS_DENIED'
-        return; // Prevent opening the locked scene
+      if (!canUnlock) {
+        console.warn(`Unlock conditions for scene '${sceneId}' not met.`);
+        return; // Do not open the scene
       }
     }
 
-    // If not locked or checkUnlock is false, proceed to open
+    // If unlock conditions are met or no unlock conditions, or checkUnlock is false
     this.currentState.currentSceneId = sceneId;
-    this.currentState.unlockedSceneIds.add(sceneId); // Mark as visited/unlocked by opening
+    this.currentState.unlockedSceneIds.add(sceneId);
 
-    const payload: SceneOpenedPayload = { sceneId };
-    this.emit('SCENE_OPENED', payload);
+    // TODO: Load actual scene content based on sceneDef.file (e.g., fetch markdown, parse JSON)
+    // For now, just logging and emitting event.
+    console.log(`Scene '${sceneId}' opened. File: ${sceneDef.file}`);
+    this.emit('SCENE_OPENED', { sceneId });
     this.emitStateChange();
-    console.log(`Scene '${sceneId}' opened.`);
   }
-}
+} // End of CaseEngine class
 
-// Example Usage (for testing with partial Dead Air bundle):
-// All the commented out lines from here down to mockDeadAirBundle will be removed.
-
-const mockDeadAirBundle: CaseBundle = {
-  id: "dead-air-mock",
-  version: "0.1.0",
-  title: "Dead Air (Mock)",
-  manifest: {
-    initialSceneId: "intro",
-    scenes: [
-      { id: "intro", title: "Introduction", file: "scenes/00_intro.md" },
-      { 
-        id: "crime_scene", 
-        title: "KACL Crime Scene", 
-        file: "scenes/01_crime_scene.md",
-        unlock: { after: "intro" }
-      },
-      { 
-        id: "evidence_review", 
-        title: "Evidence Review", 
-        file: "scenes/02_evidence_loop.json",
-        unlock: { puzzle: "freq_cipher" }
-      },
-      {
-        id: "suspect_frasier",
-        title: "Interview: Frasier Crane",
-        file: "scenes/03_frasier.md",
-        unlock: { objective: "investigate_studio" }
-      },
-      {
-        id: "final_confrontation",
-        title: "The Reveal",
-        file: "scenes/99_reveal.md",
-        unlock: { all_puzzles_solved: true }
-      }
-    ],
-  } as CaseManifest,
-  puzzles: [
-    {
-      id: "freq_cipher",
-      type: "text_input",
-      solution: "THE CREAMER SHALL FALL AT DEATH COME",
-      hints: [
-        { text: "It looks like a substitution cipher. Have you heard of Caesar's nemesis?", cost: 0 },
-        { text: "The cipher is Atbash. Each letter is mapped to its reverse in the alphabet (A=Z, B=Y, etc.).", cost: 1 }
-      ]
-    },
-    {
-      id: "sound_booth_lock",
-      type: "number_input",
-      solution: "1993",
-      hints: [
-        { text: "Think about the history of KACL.", cost: 0 },
-        { text: "When did a famous radio psychiatrist start working there?", cost: 1 }
-      ]
-    }
-  ] as PuzzleDefinition[],
-  sceneFiles: {
-    "scenes/00_intro.md": "# Dead Air - Introduction\n\nWelcome to KACL, Seattle's premier talk radio station. Or it was, until tragedy struck...",
-    "scenes/01_crime_scene.md": "# KACL Crime Scene\n\nThe studio is a mess. Equipment is scattered, and a chilling silence hangs in the air...",
-    "scenes/02_evidence_loop.json": "{ \"type\": \"interactive_evidence_viewer\", \"items\": [ {\"id\": \"ev001\", \"name\": \"Mysterious Note\"} ] }",
-    "scenes/03_frasier.md": "# Interview: Dr. Frasier Crane\n\n\'I assure you, I was at \'Le Cigare Volant\' all evening!\'",
-    "scenes/99_reveal.md": "# The Reveal\n\nAfter careful consideration, the killer is..."
-  },
-  assets: {
-    "assets/dead-air-cover.png": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
-    "puzzles/freq_cipher_image.png": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
-  }
-};
-
-// Export the mock bundle before the test function
-export { mockDeadAirBundle };
-
-export async function testEngine() {
-  console.log("\n--- Starting Engine Test with Dead Air Bundle ---");
-  const testInstanceEngine = new CaseEngine(); // Create a local instance for testing
-
-  // Setup listeners on the local testInstanceEngine
-  const unsubSceneOpened = testInstanceEngine.on('SCENE_OPENED', (payload) => { 
-    console.log(`EVENT: SCENE_OPENED - Scene ID: ${payload.sceneId}`);
-  });
-  const unsubPuzzleSolved = testInstanceEngine.on('PUZZLE_SOLVED', (payload) => { 
-      console.log(`EVENT: PUZZLE_SOLVED - Puzzle ID: ${payload.puzzleId}`);
-  });
-  const unsubPuzzleAttemptFailed = testInstanceEngine.on('PUZZLE_ATTEMPT_FAILED', (payload) => { 
-      console.log(`EVENT: PUZZLE_ATTEMPT_FAILED - Puzzle ID: ${payload.puzzleId}, Submitted: '${payload.submittedAnswer}'`);
-  });
-  const unsubHintRevealed = testInstanceEngine.on('HINT_REVEALED', (payload: HintRevealedPayload) => {
-      console.log(`EVENT: HINT_REVEALED - Puzzle ID: ${payload.puzzleId}, Hint [${payload.hintIndex}]: "${payload.hintText}", Remaining: ${payload.remainingHints ?? 'N/A'}`);
-  });
-  const unsubStateChanged = testInstanceEngine.on('STATE_CHANGED', (payload) => { 
-    console.log(`EVENT: STATE_CHANGED - Current Scene: ${payload.newState.currentSceneId}, Solved: ${Array.from(payload.newState.solvedPuzzleIds).join(', ') || 'None'}, Hints Used: ${JSON.stringify(payload.newState.hintsUsedCount)}`);
-  });
-
-  await testInstanceEngine.load(mockDeadAirBundle);
-  // 'intro' scene should be opened automatically by load()
-  // The STATE_CHANGED and SCENE_OPENED events for 'intro' should have fired.
-
-  console.log("\n--- Attempting to open 'crime_scene' (should succeed) ---");
-  testInstanceEngine.dispatch({ type: 'OPEN_SCENE', id: 'crime_scene' });
-
-  console.log("\n--- Attempting to use hint for 'freq_cipher' (1st hint) ---");
-  testInstanceEngine.dispatch({ type: 'USE_HINT', puzzleId: 'freq_cipher' });
-
-  console.log("\n--- Attempting to open 'evidence_loop' (should be locked by freq_cipher) ---");
-  testInstanceEngine.dispatch({ type: 'OPEN_SCENE', id: 'evidence_loop' });
-
-  console.log("\n--- Submitting incorrect answer to 'freq_cipher' ---");
-  testInstanceEngine.dispatch({ type: 'SUBMIT_ANSWER', puzzleId: 'freq_cipher', answer: 'WRONG' });
-
-  console.log("\n--- Attempting to use hint for 'freq_cipher' (2nd hint) ---");
-  testInstanceEngine.dispatch({ type: 'USE_HINT', puzzleId: 'freq_cipher' });
-
-  console.log("\n--- Submitting correct answer to 'freq_cipher' ---");
-  // Corrected answer for freq_cipher based on Atbash (ZGS XIVZNVZI HSZOO UZOO ZG WVZGS XLNV)
-  // For testing, let's use the one from the bundle: "THE CREAMER SHALL FALL AT DEATH COME"
-  // Wait, the solution in the bundle is "THE CREAMER SHALL FALL AT DEATH COME", 
-  // but the `testEngine` previously had `RAKUN`. Let's stick to the bundle's solution for this test call.
-  testInstanceEngine.dispatch({ type: 'SUBMIT_ANSWER', puzzleId: 'freq_cipher', answer: 'THE CREAMER SHALL FALL AT DEATH COME' });
-  
-  console.log("\n--- Attempting to use hint for 'freq_cipher' again (already solved) ---");
-  testInstanceEngine.dispatch({ type: 'USE_HINT', puzzleId: 'freq_cipher' });
-
-  console.log("\n--- Attempting to open 'evidence_loop' again (should now succeed) ---");
-  testInstanceEngine.dispatch({ type: 'OPEN_SCENE', id: 'evidence_loop' });
-  
-  // The puzzle 'rakun_folder_pw' is not in mockDeadAirBundle, so these lines will cause errors.
-  // I will comment them out for now.
-  // console.log("\n--- Testing hints for 'rakun_folder_pw' ---");
-  // testInstanceEngine.dispatch({ type: 'USE_HINT', puzzleId: 'rakun_folder_pw' }); // 1st hint
-  // testInstanceEngine.dispatch({ type: 'USE_HINT', puzzleId: 'rakun_folder_pw' }); // No more hints
-  // testInstanceEngine.dispatch({ type: 'SUBMIT_ANSWER', puzzleId: 'rakun_folder_pw', answer: 'RAKUN11' });
-
-  console.log("\n--- Test Concluded ---");
-  // Unsubscribe from events
-  unsubSceneOpened();
-  unsubPuzzleSolved();
-  unsubPuzzleAttemptFailed();
-  unsubHintRevealed(); // Unsubscribe from new listener
-  unsubStateChanged();
-  console.log("Event listeners unsubscribed.");
-}
-
-// To run the test:
-// 1. Make sure you are in the root of the monorepo.
-// 2. Execute: ts-node packages/case-engine/src/index.ts
-//    (You might need to install ts-node globally: npm install -g ts-node)
-//    (And ensure typescript is also available: npm install -g typescript, if not already)
-
-export * from './types'; 
+// Export necessary things for the UI or other packages
+// CaseEngine class is already exported with 'export class CaseEngine'
+export type { // Export all relevant types
+    CaseBundle,
+    CaseManifest,
+    PuzzleDefinition,
+    SceneDefinition,
+    EngineAction,
+    EngineState,
+    EngineEventName,
+    SceneOpenedPayload,
+    PuzzleSolvedPayload,
+    HintRevealedPayload,
+    // etc. (add other specific payloads or types if needed by UI)
+    Unsub
+}; 
