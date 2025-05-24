@@ -1,0 +1,56 @@
+const createExpoWebpackConfigAsync = require('@expo/webpack-config');
+const webpack = require('webpack');
+const path = require('path');
+
+module.exports = async function (env, argv) {
+  // Get the default Expo Webpack config
+  const config = await createExpoWebpackConfigAsync(
+    {
+      ...env,
+      // Reset babel options that we added, let Expo handle it.
+      babel: { 
+        dangerouslyAddModulePathsToTranspile: ['@decodecase/case-engine']
+      }
+    },
+    argv
+  );
+
+  // Set the Webpack context to the current directory (apps/mobile)
+  config.context = __dirname;
+
+  const workspaceRoot = path.resolve(__dirname, '../..'); // Define workspaceRoot
+
+  // Handle `process` for the web bundle (often necessary)
+  if (!config.plugins) {
+    config.plugins = [];
+  }
+  config.plugins.push(
+    new webpack.ProvidePlugin({
+      process: 'process/browser',
+    })
+  );
+  if (!config.resolve) {
+    config.resolve = {};
+  }
+  if (!config.resolve.alias) { // Ensure alias object exists
+    config.resolve.alias = {};
+  }
+  // Specific alias to help AppEntry.js find the correct App.js in the monorepo
+  const expoAppEntryDir = path.resolve(workspaceRoot, 'node_modules/expo');
+  config.resolve.alias[path.join(expoAppEntryDir, '../../App')] = path.resolve(__dirname, 'App.js');
+
+  // Ensure a single instance of React and React DOM
+  config.resolve.alias['react'] = path.resolve(workspaceRoot, 'node_modules/react');
+  config.resolve.alias['react-dom'] = path.resolve(workspaceRoot, 'node_modules/react-dom');
+
+  if (!config.resolve.fallback) {
+    config.resolve.fallback = {};
+  }
+  config.resolve.fallback.process = require.resolve('process/browser');
+
+  // Removed custom aliases for react, react-dom, and the specific AppEntry alias.
+  // Let @expo/webpack-config handle these, especially react-native -> react-native-web.
+
+  // console.log('Webpack config:', JSON.stringify(config, null, 2));
+  return config;
+}; 

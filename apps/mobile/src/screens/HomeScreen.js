@@ -9,7 +9,7 @@ const CASES_DATA = [
   { id: 'deadAir_cs', title: 'Dead Air', price: 'Free', imageName: 'deadair.png', status: 'Coming Soon' },
   // Original Available Cases
   { id: '2', title: 'Fading Minds', price: '$10.99', imageName: 'fadingminds.png', status: 'Available' },
-  { id: 'deadAir', title: 'Dead Air', price: 'Free', imageName: 'deadair.png', status: 'Available' },
+  { id: 'dead-air', title: 'Dead Air', price: 'Free', imageName: 'deadair.png', status: 'Available' },
   // ... more cases
 ];
 
@@ -65,7 +65,7 @@ const HomeScreen = ({ navigation }) => {
     return (
       <TouchableOpacity
         style={itemStyle}
-        onPress={() => navigation.navigate('CaseDetail', { caseId: item.id, caseTitle: item.title })}
+        onPress={() => navigation.navigate('CaseDetailScreen', { caseId: item.id, caseTitle: item.title })}
       >
         <View style={imageContainerStyle}>
           {imageSource ? (
@@ -152,8 +152,8 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     color: '#ffffff',
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 28,
+    fontFamily: 'Girassol-Regular',
   },
   sectionTitle: {
     fontSize: 18,

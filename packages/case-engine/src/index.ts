@@ -1,245 +1,319 @@
 import {
   CaseBundle,
   EngineAction,
-  EngineEventName,
-  EngineState,
+  // EngineEventName, // Replaced by CaseEventType
+  // EngineState, // Replaced by CaseState
   Unsub,
-  SceneOpenedPayload,
-  PuzzleSolvedPayload,
-  PuzzleAttemptFailedPayload,
-  HintRevealedPayload,
-  ObjectiveUpdatedPayload,
-  GameCompletedPayload,
-  StateChangedPayload,
+  // SceneOpenedPayload, // Now part of EventPayloadMap
+  // PuzzleSolvedPayload, // Now part of EventPayloadMap
+  // PuzzleAttemptFailedPayload, // Now part of EventPayloadMap
+  // HintRevealedPayload, // Now part of EventPayloadMap
+  // ObjectiveUpdatedPayload, // Replaced by ObjectiveCompletedPayload in EventPayloadMap
+  // GameCompletedPayload, // Replaced by FinalRevelationTriggeredPayload in EventPayloadMap
+  // StateChangedPayload, // We'll handle state changes by emitting specific events
   CaseManifest,
   PuzzleDefinition,
-  SceneDefinition
+  SceneDefinition,
+  CaseState, // Added
+  CaseEventType, // Added
+  EventPayloadMap, // Added
+  SubmitFinalAccusationPayload, // Added
+  LoadBundlePayload, // Added
+  OpenScenePayload, // Added
+  SubmitAnswerPayload, // Added
+  UseHintPayload, // Added
+  CaseStatus // Added
 } from './types';
 
-// Interface to map event names to their payload types
-interface EventPayloadMap {
-  'SCENE_OPENED': SceneOpenedPayload;
-  'PUZZLE_SOLVED': PuzzleSolvedPayload;
-  'PUZZLE_ATTEMPT_FAILED': PuzzleAttemptFailedPayload;
-  'HINT_REVEALED': HintRevealedPayload;
-  'OBJECTIVE_UPDATED': ObjectiveUpdatedPayload;
-  'GAME_COMPLETED': GameCompletedPayload;
-  'STATE_CHANGED': StateChangedPayload;
-}
+// No longer need a local EventPayloadMap, using the one from types.ts
+// interface EventPayloadMap {
+//   'SCENE_OPENED': SceneOpenedPayload;
+//   'PUZZLE_SOLVED': PuzzleSolvedPayload;
+//   'PUZZLE_ATTEMPT_FAILED': PuzzleAttemptFailedPayload;
+//   'HINT_REVEALED': HintRevealedPayload;
+//   'OBJECTIVE_UPDATED': ObjectiveUpdatedPayload;
+//   'GAME_COMPLETED': GameCompletedPayload;
+//   'STATE_CHANGED': StateChangedPayload;
+// }
 
 // Using a more general type for the internal storage of handlers
-type EventHandlers = {
-  [K in EngineEventName]?: ((payload: EventPayloadMap[K]) => void)[];
+type InternalEventHandlers = {
+  [K in CaseEventType]?: ((payload: EventPayloadMap[K]) => void)[];
 };
 
 export class CaseEngine {
-  private currentBundle: CaseBundle | null = null;
-  private currentState: EngineState;
-  // Store handlers in a way that allows for mixed types internally, but overloads provide external safety
-  private eventHandlers: { [key: string]: ((payload: any) => void)[] } = {};
+  // private currentBundle: CaseBundle | null = null; // Now part of CaseState
+  private state: CaseState;
+  private eventHandlers: InternalEventHandlers = {}; // Use the new type
 
-  constructor() {
-    this.currentState = this.getInitialEngineState();
+  constructor(initialState?: Partial<CaseState>) {
+    this.state = this.getInitialEngineState(initialState);
     console.log("CaseEngine initialized.");
   }
 
-  private getInitialEngineState(): EngineState {
+  private getInitialEngineState(initialValues: Partial<CaseState> = {}): CaseState {
     return {
-      currentCaseId: null,
+      currentBundle: null,
       currentSceneId: null,
       unlockedSceneIds: new Set<string>(),
       solvedPuzzleIds: new Set<string>(),
-      activeObjectives: new Set<string>(),
-      completedObjectives: new Set<string>(),
-      failedObjectives: new Set<string>(),
-      hintsUsedCount: {},
-      isGameCompleted: false,
-      gameOutcome: undefined,
+      completedObjectiveIds: new Set<string>(),
+      hintsUsed: {},
+      inventory: new Set<string>(),
+      caseStatus: 'UNINITIALIZED',
+      errorMessage: undefined,
+      actionHistory: [],
+      eventHistory: [],
+      ...initialValues,
     };
   }
 
-  /**
-   * Loads a case bundle into the engine.
-   * @param bundle The case bundle to load.
-   */
-  public async load(bundle: CaseBundle): Promise<void> {
-    console.log(`Loading case: ${bundle.title}`);
-    this.currentBundle = bundle;
-    this.currentState = {
-        ...this.getInitialEngineState(),
-        currentCaseId: bundle.id,
-    };
-    let initialSceneId = bundle.manifest.initialSceneId;
-    if (!initialSceneId && bundle.manifest.scenes.length > 0) {
-        initialSceneId = bundle.manifest.scenes[0].id;
+  public async loadBundle(payload: LoadBundlePayload): Promise<void> {
+    const { bundle } = payload;
+    console.log(`Loading case: ${bundle.manifest.metadata?.title || 'Untitled Case'}`);
+    this.state = this.getInitialEngineState({
+        currentBundle: bundle,
+        caseStatus: 'LOADED'
+    });
+
+    // Emit CASE_LOADED event
+    this.emit('CASE_LOADED', { manifest: bundle.manifest, initialSceneId: bundle.manifest.initialSceneId });
+    
+    // Optionally, auto-start the case or open initial scene
+    // For now, let's assume START_CASE action will be dispatched next by the UI
+    // this.startCase(); // Or this.openSceneInternal(bundle.manifest.initialSceneId, false);
+
+    console.log("Case bundle loaded successfully. Ready to start.");
+  }
+
+  public startCase(): void {
+    if (!this.state.currentBundle) {
+      console.error("Cannot start case: No bundle loaded.");
+      this.state.caseStatus = 'ERROR';
+      this.state.errorMessage = "Cannot start case: No bundle loaded.";
+      // Consider emitting an error event
+      return;
     }
+    if (this.state.caseStatus !== 'LOADED') {
+        console.warn(`Case cannot be started from status: ${this.state.caseStatus}. It must be LOADED.`);
+        // Optionally emit a warning or error event
+        return;
+    }
+
+    this.state.caseStatus = 'RUNNING';
+    const initialSceneId = this.state.currentBundle.manifest.initialSceneId;
+    this.emit('CASE_STARTED', { initialSceneId });
+    
     if (initialSceneId) {
-        this.openSceneInternal(initialSceneId, false);
+      this.openSceneInternal(initialSceneId, false); // Open initial scene without checking unlock
     } else {
-        console.warn("No scenes found in the manifest or no initial scene specified.");
-        this.emitStateChange();
+      console.warn("No initial scene ID specified in the manifest.");
+      // Potentially set game to a specific state or emit an event
     }
-    console.log("Case loaded successfully.");
   }
 
-  /**
-   * Gets the current state of the engine.
-   */
-  public get state(): EngineState {
-    // Perform a deep copy that correctly handles Sets and other object types
-    return {
-      currentCaseId: this.currentState.currentCaseId,
-      currentSceneId: this.currentState.currentSceneId,
-      unlockedSceneIds: new Set(this.currentState.unlockedSceneIds),
-      solvedPuzzleIds: new Set(this.currentState.solvedPuzzleIds),
-      activeObjectives: new Set(this.currentState.activeObjectives),
-      completedObjectives: new Set(this.currentState.completedObjectives),
-      failedObjectives: new Set(this.currentState.failedObjectives),
-      hintsUsedCount: { ...this.currentState.hintsUsedCount }, // Shallow copy for this specific object
-      isGameCompleted: this.currentState.isGameCompleted,
-      gameOutcome: this.currentState.gameOutcome,
-    };
+  public getState(): CaseState {
+    // Perform a deep copy for safety, especially for Sets and objects
+    return JSON.parse(JSON.stringify(this.state, (key, value) => {
+      if (value instanceof Set) {
+        return Array.from(value);
+      }
+      return value;
+    }));
   }
 
-  /**
-   * Subscribes to an engine event.
-   * @param eventName The name of the event to subscribe to.
-   * @param handler The function to call when the event occurs.
-   * @returns An unsubscribe function.
-   */
-  // Overloads for specific event types
-  public on<K extends EngineEventName>(eventName: K, handler: (payload: EventPayloadMap[K]) => void): Unsub;
-  // General implementation (will be used by the overloads)
-  public on(eventName: EngineEventName, handler: (payload: any) => void): Unsub {
+  public on<K extends CaseEventType>(eventName: K, handler: (payload: EventPayloadMap[K]) => void): Unsub {
     if (!this.eventHandlers[eventName]) {
       this.eventHandlers[eventName] = [];
     }
-    this.eventHandlers[eventName].push(handler);
+    // The type assertion is okay here because K is constrained by CaseEventType
+    (this.eventHandlers[eventName] as ((payload: EventPayloadMap[K]) => void)[]).push(handler);
 
     return () => {
       const handlers = this.eventHandlers[eventName];
       if (handlers) {
-        this.eventHandlers[eventName] = handlers.filter(h => h !== handler);
-        if (this.eventHandlers[eventName].length === 0) {
+        // The type assertion is okay here
+        this.eventHandlers[eventName] = handlers.filter(h => h !== handler) as any;
+        if (this.eventHandlers[eventName]?.length === 0) {
           delete this.eventHandlers[eventName];
         }
       }
     };
   }
 
-  /**
-   * Dispatches an action to the engine.
-   * @param action The action to dispatch.
-   */
   public dispatch(action: EngineAction): void {
-    console.log("Dispatching action:", action);
+    console.log("Dispatching action:", action.type, action.payload);
+    this.state.actionHistory.push(action);
 
-    if (!this.currentBundle) {
-      console.error("Cannot dispatch action: No case bundle loaded.");
+    if (action.type !== 'LOAD_BUNDLE' && (!this.state.currentBundle || this.state.caseStatus === 'UNINITIALIZED')) {
+      console.error("Cannot dispatch action: No case bundle loaded or engine not initialized properly.");
+      this.state.errorMessage = "Action dispatched before bundle loaded.";
+      // Optionally emit an error event
       return;
+    }
+    
+    // For actions other than LOAD_BUNDLE and START_CASE, ensure the case is RUNNING
+    if (action.type !== 'LOAD_BUNDLE' && action.type !== 'START_CASE' && this.state.caseStatus !== 'RUNNING') {
+        if(this.state.caseStatus === 'COMPLETED') {
+            console.warn(`Cannot dispatch action '${action.type}': Case is already COMPLETED.`);
+            return;
+        }
+        console.error(`Cannot dispatch action '${action.type}': Case is not RUNNING. Current status: ${this.state.caseStatus}`);
+        this.state.errorMessage = `Action ${action.type} dispatched while case not running.`;
+        // Optionally emit an error event
+        return;
     }
 
     switch (action.type) {
+      case 'LOAD_BUNDLE':
+        this.loadBundle(action.payload);
+        break;
+      case 'START_CASE':
+        this.startCase();
+        break;
       case 'OPEN_SCENE':
-        this.openSceneInternal(action.id);
+        this.openSceneInternal(action.payload.sceneId);
         break;
       case 'SUBMIT_ANSWER':
-        this.handleSubmitAnswer(action.puzzleId, action.answer);
+        this.handleSubmitAnswer(action.payload);
         break;
       case 'USE_HINT':
-        this.handleUseHint(action.puzzleId);
+        this.handleUseHint(action.payload);
         break;
-      case 'ACCUSE':
-        console.warn(`Action type ${action.type} not yet implemented.`);
+      case 'SUBMIT_FINAL_ACCUSATION': // Added
+        this.handleSubmitFinalAccusation(action.payload);
         break;
       default:
+        // This should ideally not happen if types are correct
         console.warn(`Unknown action type: ${(action as any).type}`);
     }
   }
 
-  // --- Internal Helper Methods ---
-
-  private handleSubmitAnswer(puzzleId: string, submittedAnswer: string): void {
-    if (!this.currentBundle?.puzzles) {
+  private handleSubmitAnswer(payload: SubmitAnswerPayload): void {
+    const { puzzleId, answer } = payload;
+    if (!this.state.currentBundle?.manifest.puzzles) {
       console.error("No puzzles defined in the current bundle.");
       return;
     }
-    const puzzleDef = this.currentBundle.puzzles.find(p => p.id === puzzleId);
+    const puzzleDef = this.state.currentBundle.manifest.puzzles.find(p => p.id === puzzleId);
 
     if (!puzzleDef) {
       console.error(`Puzzle with id '${puzzleId}' not found in bundle.`);
       return;
     }
 
-    // Simple string comparison for now. Case sensitive.
-    // TODO: Allow for more complex answer checking based on puzzleDef.type
-    const correctAnswer = puzzleDef.solution ?? puzzleDef.answer;
+    const correctAnswer = puzzleDef.solution;
     if (correctAnswer === undefined) {
-        console.error(`Puzzle '${puzzleId}' has no solution/answer defined.`);
+        console.error(`Puzzle '${puzzleId}' has no solution defined.`);
         return;
     }
 
-    if (String(correctAnswer).trim() === String(submittedAnswer).trim()) {
-      if (!this.currentState.solvedPuzzleIds.has(puzzleId)) {
-        this.currentState.solvedPuzzleIds.add(puzzleId);
-        const payload: PuzzleSolvedPayload = { puzzleId };
-        this.emit('PUZZLE_SOLVED', payload);
-        this.emitStateChange(); // State has changed due to puzzle solve
+    const isCorrect = Array.isArray(correctAnswer)
+      ? correctAnswer.map(s => String(s).trim()).includes(String(answer).trim())
+      : String(correctAnswer).trim() === String(answer).trim();
+
+    if (isCorrect) {
+      if (!this.state.solvedPuzzleIds.has(puzzleId)) {
+        this.state.solvedPuzzleIds.add(puzzleId);
+        this.emit('PUZZLE_SOLVED', { puzzleId });
         console.log(`Puzzle '${puzzleId}' solved!`);
+        // Check for all puzzles solved
+        this.checkAllPuzzlesSolved();
       } else {
         console.log(`Puzzle '${puzzleId}' was already solved.`);
-        // Optionally, re-emit PUZZLE_SOLVED or do nothing
       }
     } else {
-      const payload: PuzzleAttemptFailedPayload = { puzzleId, submittedAnswer };
-      this.emit('PUZZLE_ATTEMPT_FAILED', payload);
-      console.warn(`Incorrect answer for puzzle '${puzzleId}'. Submitted: '${submittedAnswer}'`);
+      this.emit('PUZZLE_ATTEMPT_FAILED', { puzzleId, attemptedAnswer: answer });
+      console.warn(`Incorrect answer for puzzle '${puzzleId}'. Submitted: '${answer}'`);
     }
   }
 
-  private handleUseHint(puzzleId: string): void {
-    if (!this.currentBundle?.puzzles) {
+  private handleUseHint(payload: UseHintPayload): void {
+    const { puzzleId, hintIndex } = payload;
+    if (!this.state.currentBundle?.manifest.puzzles) {
       console.error("Cannot use hint: No puzzles defined.");
       return;
     }
-    const puzzleDef = this.currentBundle.puzzles.find(p => p.id === puzzleId);
+    const puzzleDef = this.state.currentBundle.manifest.puzzles.find(p => p.id === puzzleId);
     if (!puzzleDef) {
       console.error(`Cannot use hint: Puzzle '${puzzleId}' not found.`);
       return;
     }
-    if (this.currentState.solvedPuzzleIds.has(puzzleId)){
+    if (this.state.solvedPuzzleIds.has(puzzleId)){
       console.log(`Puzzle '${puzzleId}' is already solved. No hint provided.`);
+      // Optionally emit an event indicating this
       return;
     }
     if (!puzzleDef.hints || puzzleDef.hints.length === 0) {
       console.log(`No hints available for puzzle '${puzzleId}'.`);
+      // Optionally emit an event
       return;
     }
 
-    const usedHintCount = this.currentState.hintsUsedCount[puzzleId] || 0;
-    if (usedHintCount >= puzzleDef.hints.length) {
-      console.log(`All hints already used for puzzle '${puzzleId}'.`);
-      return;
+    // Initialize hintsUsed set for the puzzle if it doesn't exist
+    if (!this.state.hintsUsed[puzzleId]) {
+      this.state.hintsUsed[puzzleId] = new Set<number>();
     }
 
-    const hintToReveal = puzzleDef.hints[usedHintCount];
-    this.currentState.hintsUsedCount[puzzleId] = usedHintCount + 1;
+    if (hintIndex < 0 || hintIndex >= puzzleDef.hints.length) {
+        console.error(`Invalid hint index ${hintIndex} for puzzle '${puzzleId}'.`);
+        return;
+    }
 
-    const remainingHints = puzzleDef.hints.length - (usedHintCount + 1);
-    this.emit('HINT_REVEALED', { 
-      puzzleId, 
-      hintText: hintToReveal.text, 
-      hintIndex: usedHintCount, 
-      remainingHints 
+    if (this.state.hintsUsed[puzzleId].has(hintIndex)) {
+        console.log(`Hint ${hintIndex} for puzzle '${puzzleId}' already revealed.`);
+        // Optionally re-emit HINT_REVEALED with the known hint
+        const hint = puzzleDef.hints[hintIndex];
+        this.emit('HINT_REVEALED', {
+            puzzleId,
+            hint,
+            hintIndex,
+            hintsUsedCount: this.state.hintsUsed[puzzleId].size
+        });
+        return;
+    }
+
+    const hintToReveal = puzzleDef.hints[hintIndex];
+    this.state.hintsUsed[puzzleId].add(hintIndex);
+
+    this.emit('HINT_REVEALED', {
+      puzzleId,
+      hint: hintToReveal,
+      hintIndex: hintIndex,
+      hintsUsedCount: this.state.hintsUsed[puzzleId].size
     });
-    this.emitStateChange();
-    console.log(`Hint revealed for puzzle '${puzzleId}'.`);
+    console.log(`Hint ${hintIndex} revealed for puzzle '${puzzleId}'.`);
+  }
+  
+  // New method for final accusation
+  private handleSubmitFinalAccusation(payload: SubmitFinalAccusationPayload): void {
+    const { characterId } = payload;
+    if (this.state.caseStatus === 'COMPLETED') {
+        console.warn("Final accusation submitted but case is already completed.");
+        return; // Or re-emit the final revelation
+    }
+
+    console.log(`Player has accused character: ${characterId}`);
+    this.state.caseStatus = 'COMPLETED';
+
+    // The revelation scene ID is fixed as per our design
+    const revelationSceneId = 'final_revelation_scene';
+
+    this.emit('FINAL_REVELATION_TRIGGERED', {
+      accusedCharacterId: characterId,
+      revelationSceneId: revelationSceneId,
+    });
+    console.log(`Case completed. Final revelation triggered for scene: ${revelationSceneId}`);
   }
 
-  private emit<K extends EngineEventName>(eventName: K, payload: EventPayloadMap[K]): void {
+  private emit<K extends CaseEventType>(eventName: K, payload: EventPayloadMap[K]): void {
+    // Record event in history
+    this.state.eventHistory.push({ eventType: eventName, payload, timestamp: Date.now() });
+
     const handlers = this.eventHandlers[eventName];
     if (handlers) {
-      handlers.forEach(handler => {
+      // The type assertion is okay here because K is constrained
+      (handlers as ((payload: EventPayloadMap[K]) => void)[]).forEach(handler => {
         try {
           handler(payload);
         } catch (error) {
@@ -249,83 +323,79 @@ export class CaseEngine {
     }
   }
 
-  private emitStateChange(): void {
-    const newState = this.state; // Get a deep copy
-    this.emit('STATE_CHANGED', { newState });
-  }
-
   private openSceneInternal(sceneId: string, checkUnlock: boolean = true): void {
-    if (!this.currentBundle) {
-      console.error("Cannot open scene: No case bundle loaded.");
+    if (!this.state.currentBundle) {
+      console.error("Cannot open scene: No bundle loaded.");
       return;
     }
-    const sceneDef = this.currentBundle.manifest.scenes.find(s => s.id === sceneId);
+    const sceneDef = this.state.currentBundle.manifest.scenes.find(s => s.id === sceneId);
     if (!sceneDef) {
       console.error(`Scene with id '${sceneId}' not found in manifest.`);
+      this.emit('SCENE_UNLOCK_FAILED', { sceneId, reason: 'Scene not found in manifest' });
       return;
     }
 
     if (checkUnlock && sceneDef.unlock) {
-      const { after, puzzle, objective, all_puzzles_solved } = sceneDef.unlock;
+      const unlockConditions = sceneDef.unlock;
       let canUnlock = true;
 
-      if (after && !this.currentState.unlockedSceneIds.has(after)) {
-        // For 'after', we might need a concept of 'completed' scenes, not just 'unlocked'.
-        // For now, 'unlocked' implies visited/completed for simplicity.
-        console.log(`Scene '${sceneId}' locked: Scene '${after}' not yet visited/completed.`);
-        canUnlock = false;
+      if (unlockConditions.after) {
+        canUnlock = canUnlock && unlockConditions.after.every(id => this.state.unlockedSceneIds.has(id) || this.state.currentSceneId === id);
       }
-      if (puzzle && !this.currentState.solvedPuzzleIds.has(puzzle)) {
-        console.log(`Scene '${sceneId}' locked: Puzzle '${puzzle}' not solved.`);
-        canUnlock = false;
+      if (unlockConditions.puzzle) {
+        canUnlock = canUnlock && this.state.solvedPuzzleIds.has(unlockConditions.puzzle);
       }
-      if (objective && !this.currentState.completedObjectives.has(objective)) {
-        console.log(`Scene '${sceneId}' locked: Objective '${objective}' not completed.`);
-        canUnlock = false;
+      if (unlockConditions.objective) {
+        canUnlock = canUnlock && this.state.completedObjectiveIds.has(unlockConditions.objective);
       }
-      if (all_puzzles_solved) {
-        const totalPuzzlesInBundle = this.currentBundle.puzzles?.length || 0;
-        if (this.currentState.solvedPuzzleIds.size < totalPuzzlesInBundle) {
-          console.log(`Scene '${sceneId}' locked: Not all puzzles in the bundle are solved yet.`);
-          canUnlock = false;
-        } else if (totalPuzzlesInBundle === 0) {
-            console.log(`Scene '${sceneId}' unlock condition 'all_puzzles_solved' met (no puzzles in bundle).`);
-        } else {
-            console.log(`Scene '${sceneId}' unlock condition 'all_puzzles_solved' met.`);
-        }
+      if (unlockConditions.all_puzzles_solved) {
+        const puzzlesToSolve = Array.isArray(unlockConditions.all_puzzles_solved)
+          ? unlockConditions.all_puzzles_solved
+          : (this.state.currentBundle.manifest.puzzles || []).map(p => p.id);
+        canUnlock = canUnlock && puzzlesToSolve.every(pid => this.state.solvedPuzzleIds.has(pid));
       }
-      
+
       if (!canUnlock) {
-        console.warn(`Unlock conditions for scene '${sceneId}' not met.`);
-        return; // Do not open the scene
+        console.warn(`Scene '${sceneId}' is locked. Conditions not met.`);
+        this.emit('SCENE_UNLOCK_FAILED', { sceneId, reason: 'Unlock conditions not met' });
+        return;
       }
     }
 
-    // If unlock conditions are met or no unlock conditions, or checkUnlock is false
-    this.currentState.currentSceneId = sceneId;
-    this.currentState.unlockedSceneIds.add(sceneId);
+    this.state.currentSceneId = sceneId;
+    this.state.unlockedSceneIds.add(sceneId);
 
-    // TODO: Load actual scene content based on sceneDef.file (e.g., fetch markdown, parse JSON)
-    // For now, just logging and emitting event.
-    console.log(`Scene '${sceneId}' opened. File: ${sceneDef.file}`);
-    this.emit('SCENE_OPENED', { sceneId });
-    this.emitStateChange();
+    let sceneContent: string | undefined = undefined;
+    if (sceneDef.file) {
+        const fileData = this.state.currentBundle.files.find(f => f.path === sceneDef.file);
+        if (fileData) {
+            sceneContent = fileData.content;
+        } else {
+            console.warn(`Content file ${sceneDef.file} for scene ${sceneId} not found in bundle files.`);
+        }
+    }
+
+    this.emit('SCENE_OPENED', { sceneId, sceneDefinition: sceneDef, content: sceneContent });
+    console.log(`Scene '${sceneId}' opened successfully.`);
   }
-} // End of CaseEngine class
+  
+  private checkAllPuzzlesSolved(): void {
+    if (!this.state.currentBundle || !this.state.currentBundle.manifest.puzzles) {
+      return; 
+    }
+    const allPuzzles = this.state.currentBundle.manifest.puzzles;
+    const allSolved = allPuzzles.every(p => this.state.solvedPuzzleIds.has(p.id));
 
-// Export necessary things for the UI or other packages
-// CaseEngine class is already exported with 'export class CaseEngine'
-export type { // Export all relevant types
-    CaseBundle,
-    CaseManifest,
-    PuzzleDefinition,
-    SceneDefinition,
-    EngineAction,
-    EngineState,
-    EngineEventName,
-    SceneOpenedPayload,
-    PuzzleSolvedPayload,
-    HintRevealedPayload,
-    // etc. (add other specific payloads or types if needed by UI)
-    Unsub
-}; 
+    if (allSolved) {
+      this.emit('ALL_PUZZLES_SOLVED', {});
+      console.log("All puzzles in the case have been solved!");
+      // Potentially trigger other game events or objectives based on this
+    }
+  }
+}
+
+// Basic test
+// async function testEngine() { ... } // Remove entire function
+
+// Comment out to prevent auto-run when imported if this becomes a library
+// testEngine().catch(console.error); // Remove this line 

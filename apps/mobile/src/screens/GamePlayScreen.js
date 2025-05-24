@@ -5,7 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '@react-navigation/native';
 
 // Import the case data service
-import { getCaseDataById } from '../data/caseDataService.js';
+import { getCaseDataById } from '../data-old/caseDataService.js';
 
 // --- Reusable Components for Displaying Case Data ---
 

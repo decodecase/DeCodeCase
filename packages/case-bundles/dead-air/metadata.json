@@ -1,11 +1,11 @@
 {
   "id": "dead-air",
   "title": "Dead Air",
-  "tagline": "Can you solve the mystery before the signal fades?",
+  "tagline": "Can you solve the final broadcast?",
   "version": "1.0.0",
-  "description": "A thrilling mystery case where you need to uncover the truth behind a strange broadcast.",
+  "description": "A beloved radio host is found dead in his studio. The room was locked. The mic was on. And someone was listening. Step into the role of a cold-case investigator and uncover the truth behind the silence. Dead Air is a highly immersive, narrative-driven mystery game where every note, every letter, and every pause hides a secret.",
   "cover": "assets/images/dead-air-cover.png",
-  "author": "Your Name/Studio",
+  "author": "Decodecase",
   "genre": ["Mystery", "Detective"],
   "duration_estimate_min": "2-4 hours"
 } 

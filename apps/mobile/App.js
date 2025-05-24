@@ -1,167 +1,130 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, ScrollView } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import * as Font from 'expo-font';
+
+// Engine and bundle imports (can be moved or managed differently later)
 import { CaseEngine } from '@decodecase/case-engine';
 import deadAirManifest from '../../packages/case-bundles/dead-air/manifest.json';
 import deadAirMetadata from '../../packages/case-bundles/dead-air/metadata.json';
 import deadAirPuzzles from '../../packages/case-bundles/dead-air/puzzles.json';
 
+// Screen imports
+import SplashScreen from './src/screens/SplashScreen';
+import AuthScreen from './src/screens/AuthScreen';
+import HomeScreen from './src/screens/HomeScreen';
+import CaseListScreen from './src/screens/CaseListScreen';
+import CaseDetailScreen from './src/screens/CaseDetailScreen';
+import InvestigationDashboardScreen from './src/screens/InvestigationDashboardScreen';
+import PdfViewerScreen from './src/screens/PdfViewerScreen';
+import CheckoutScreen from './src/screens/CheckoutScreen';
+
+const Stack = createStackNavigator();
+
+// Global engine instance (consider managing this with Context or a service)
+let engine;
+
 export default function App() {
-  const [engineState, setEngineState] = useState(null);
-  const [logMessages, setLogMessages] = useState([]);
+  const [fontsLoaded, setFontsLoaded] = useState(false);
+  const [logMessages, setLogMessages] = useState([]); // Keep for now if engine logs are useful globally
 
   useEffect(() => {
-    const originalLog = console.log;
-    const originalWarn = console.warn;
-    const originalError = console.error;
+    let isMounted = true; // Prevent state updates on unmounted component
+    // const originalLog = console.log; // For console override
+    // const originalWarn = console.warn;
+    // const originalError = console.error;
 
-    const appendLog = (type, ...args) => {
-      setLogMessages(prev => [...prev, `[${type}] ${args.map(arg => JSON.stringify(arg, null, 2)).join(' ')}`]);
-      originalLog.apply(console, [`[${type}]`, ...args]);
-    };
-
-    console.log = (...args) => appendLog('LOG', ...args);
-    console.warn = (...args) => appendLog('WARN', ...args);
-    console.error = (...args) => appendLog('ERROR', ...args);
-
-    async function initializeEngine() {
+    async function setupApp() {
       try {
-        console.log("Initializing CaseEngine...");
-        const engine = new CaseEngine();
+        // Optional: Setup console overrides here if needed globally and manage setLogMessages carefully
+        // const appendLog = (type, ...args) => { ... }; 
+        // console.log = (...args) => appendLog('LOG', ...args);
+
+        await Font.loadAsync({
+          'Girassol-Regular': require('./assets/fonts/Girassol-Regular.ttf'),
+        });
         
-        engine.on('STATE_CHANGED', (payload) => {
-          console.log("Engine STATE_CHANGED:", payload.newState);
-          setEngineState(JSON.stringify(payload.newState, (key, value) => {
-            if (value instanceof Set) {
-              return Array.from(value);
-            }
-            return value;
-          }, 2));
+        if (isMounted) {
+          setFontsLoaded(true);
+        }
+        console.log("Custom fonts loaded.");
+
+        console.log("Initializing CaseEngine (App.js)...");
+        engine = new CaseEngine(); 
+        
+        engine.on('CASE_LOADED', (payload) => {
+          console.log("Engine CASE_LOADED (App.js):", payload);
+          console.log("Dispatching START_CASE (App.js)...");
+          engine.dispatch({ type: 'START_CASE' });
         });
 
+        engine.on('CASE_STARTED', (payload) => {
+          console.log("Engine CASE_STARTED (App.js):", payload);
+        });
+        
         engine.on('SCENE_OPENED', (payload) => {
-          console.log("Engine SCENE_OPENED:", payload);
+          console.log("Engine SCENE_OPENED (App.js):", payload);
         });
 
         engine.on('PUZZLE_SOLVED', (payload) => {
-          console.log("Engine PUZZLE_SOLVED:", payload);
+          console.log("Engine PUZZLE_SOLVED (App.js):", payload);
         });
         
-        console.log("Constructing Dead Air case bundle...");
-        const deadAirCaseBundle = {
-          id: deadAirMetadata.id,
-          title: deadAirMetadata.title,
-          tagline: deadAirMetadata.tagline,
-          version: deadAirMetadata.version,
-          duration_estimate_min: deadAirMetadata.duration_estimate_min,
-          cover: deadAirMetadata.cover,
-          manifest: deadAirManifest,
-          puzzles: deadAirPuzzles,
-          assetsBasePath: "../../packages/case-bundles/dead-air/" // Adjust if necessary
-        };
-        console.log("Dead Air Case Bundle:", deadAirCaseBundle);
+        engine.on('PUZZLE_ATTEMPT_FAILED', (payload) => {
+          console.log("Engine PUZZLE_ATTEMPT_FAILED (App.js):", payload);
+        });
+        
+        engine.on('HINT_REVEALED', (payload) => {
+          console.log("Engine HINT_REVEALED (App.js):", payload);
+        });
 
-        console.log("Loading Dead Air bundle into engine...");
-        await engine.load(deadAirCaseBundle);
-        console.log("Bundle loading process initiated.");
-
-        // The initial state will be set by the STATE_CHANGED event listener
-        // For direct access after load (if needed, though event is better):
-        // const currentEngineState = engine.state;
-        // console.log("Initial Engine State from getter:", currentEngineState);
-        // setEngineState(JSON.stringify(currentEngineState, (key, value) => {
-        //   if (value instanceof Set) {
-        //     return Array.from(value);
-        //   }
-        //   return value;
-        // }, 2));
+        engine.on('FINAL_REVELATION_TRIGGERED', (payload) => {
+          console.log("Engine FINAL_REVELATION_TRIGGERED (App.js):", payload);
+        });
 
       } catch (error) {
-        console.error("Error during engine initialization:", error);
-        setLogMessages(prev => [...prev, `[ERROR] Initialization failed: ${error.message}`]);
+        console.error("Error during app setup (fonts or engine) (App.js):", error);
       }
     }
 
-    initializeEngine();
+    setupApp();
 
     return () => {
-      // Restore original console functions on unmount
-      console.log = originalLog;
-      console.warn = originalWarn;
-      console.error = originalError;
+      isMounted = false;
+      // Restore original console functions if overridden
+      // console.log = originalLog;
+      // console.warn = originalWarn;
+      // console.error = originalError;
     };
-  }, []);
+  }, []); 
+
+  if (!fontsLoaded) {
+    return null; // Or a proper loading screen/SplashScreen component
+  }
+
+  // Basic authentication check (example, replace with your actual auth logic)
+  const [isAuthenticated, setIsAuthenticated] = useState(false); // Example state
+  // In a real app, SplashScreen would determine this and navigate accordingly.
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Case Engine Test</Text>
-      <Text style={styles.statusText}>
-        {engineState ? "Engine Initialized. Current State:" : "Initializing Engine..."}
-      </Text>
-      <ScrollView style={styles.stateDisplayScroll} contentContainerStyle={styles.stateDisplayContainer}>
-        <Text style={styles.stateText}>{engineState || "Waiting for state..."}</Text>
-      </ScrollView>
-      <Text style={styles.logTitle}>Console Logs:</Text>
-      <ScrollView style={styles.logDisplay}>
-        {logMessages.map((msg, index) => (
-          <Text key={index} style={styles.logText}>{msg}</Text>
-        ))}
-      </ScrollView>
-    </View>
+    <NavigationContainer>
+      <Stack.Navigator 
+        initialRouteName="SplashScreen" // Start with SplashScreen
+        screenOptions={{ headerShown: false }} // Hide headers globally for now
+      >
+        <Stack.Screen name="SplashScreen" component={SplashScreen} />
+        <Stack.Screen name="AuthScreen" component={AuthScreen} />
+        <Stack.Screen name="HomeScreen" component={HomeScreen} />
+        <Stack.Screen name="CaseListScreen" component={CaseListScreen} />
+        <Stack.Screen name="CaseDetailScreen" component={CaseDetailScreen} />
+        <Stack.Screen name="InvestigationDashboardScreen" component={InvestigationDashboardScreen} />
+        <Stack.Screen name="PdfViewerScreen" component={PdfViewerScreen} />
+        <Stack.Screen name="CheckoutScreen" component={CheckoutScreen} />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'flex-start', // Align items to the top
-    paddingTop: 50, // Add padding to avoid overlap with status bar
-    paddingHorizontal: 10,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  statusText: {
-    fontSize: 16,
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  stateDisplayScroll: {
-    maxHeight: 200, // Limit height of state display
-    width: '100%',
-    borderColor: '#ccc',
-    borderWidth: 1,
-    borderRadius: 5,
-    marginBottom: 10,
-  },
-  stateDisplayContainer: {
-    padding: 10,
-  },
-  stateText: {
-    fontSize: 12,
-    fontFamily: 'monospace', // Use monospace for better formatting of JSON
-  },
-  logTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginTop: 10,
-    marginBottom: 5,
-  },
-  logDisplay: {
-    flex: 1, // Take remaining space
-    width: '100%',
-    borderColor: '#ddd',
-    borderWidth: 1,
-    borderRadius: 5,
-    padding: 10,
-    backgroundColor: '#f9f9f9',
-  },
-  logText: {
-    fontSize: 10,
-    fontFamily: 'monospace',
-    marginBottom: 2,
-  }
-});
+// Styles are no longer needed here as the debug UI is removed.
+// You can remove the old styles const if it's not used by any imported screen.
+// const styles = StyleSheet.create({ ... });

@@ -1,86 +1,93 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Platform, SafeAreaView, Dimensions, Alert } from 'react-native';
 
-// Import specific case data
-import { deadAirCaseData } from '../data/deadAirData.js';
-
-// Helper to get image source - for other cases if any
-const getCaseImageSource = (imageName) => {
-  if (!imageName) return null;
-  switch (imageName) {
-    case 'thefinalnote.png':
-      return require('../assets/images/thefinalnote.png');
-    case 'fadingminds.png':
-      return require('../assets/images/fadingminds.png');
-    // deadair.png is handled directly from deadAirCaseData.coverImage if caseId is 'deadAir'
-    // case 'deadair.png': 
-    //   return require('../assets/images/deadair.png');
+// Placeholder for dynamic bundle loading. In a real app, you might have a more robust registry or loading mechanism.
+const loadBundleData = async (caseId) => {
+  console.log(`[loadBundleData] Attempting to load bundle for caseId: ${caseId}`);
+  try {
+    switch (caseId) {
+      case 'dead-air':
+        console.log('[loadBundleData] Matched case: dead-air');
+        const metadataModule = await import(`../../../../packages/case-bundles/dead-air/metadata.json`);
+        console.log('[loadBundleData] Imported metadataModule:', metadataModule);
+        const manifestModule = await import(`../../../../packages/case-bundles/dead-air/manifest.json`);
+        console.log('[loadBundleData] Imported manifestModule:', manifestModule);
+        const puzzlesModule = await import(`../../../../packages/case-bundles/dead-air/puzzles.json`);
+        console.log('[loadBundleData] Imported puzzlesModule:', puzzlesModule);
+        const coverImage = require('../../../../packages/case-bundles/dead-air/assets/images/deadair.png');
+        console.log('[loadBundleData] Required coverImage:', coverImage);
+        return {
+          metadata: metadataModule,
+          manifest: manifestModule,
+          puzzles: puzzlesModule,
+          coverImageRequire: coverImage,
+        };
+      // Add other cases here, e.g.:
+      // case 'fading-minds':
+      //   return {
+      //     metadata: await import(`../../../../packages/case-bundles/${caseId}/metadata.json`),
+      //     manifest: await import(`../../../../packages/case-bundles/${caseId}/manifest.json`),
+      //     puzzles: await import(`../../../../packages/case-bundles/${caseId}/puzzles.json`),
+      //     coverImageRequire: require(`../../../../packages/case-bundles/${caseId}/assets/images/cover.png`), // Generic path if cover image name is consistent or in metadata
+      //   };
     default:
+        console.log(`[loadBundleData] No case matched for caseId: ${caseId}`);
       return null;
+  }
+  } catch (error) {
+    console.error('[loadBundleData] Error during import/require:', error);
+    return null; // Ensure null is returned on error
   }
 };
 
-// Placeholder data for cases - this can be simplified or used as a fallback
-const getCaseDetailsFromPlaceholder = (caseId) => {
-  const allCases = {
-    '1': { 
-      id: '1',
-      title: 'The Final Note',
-      imageName: 'thefinalnote.png',
-      description: 'Unravel the mystery behind the composer\'s final, cryptic composition. Was it a suicide note or a cleverly disguised confession?',
-      price: '$10.99',
-      status: 'Coming Soon'
-    },
-    '2': { 
-      id: '2',
-      title: 'FADING MINDS',
-      imageName: 'fadingminds.png',
-      description: 'FADING MINDS plunges you into the eerie halls of the Amwell NeuroScience Center, where an experiment to erase traumatic memories has gone catastrophically wrong. Ten participants entered seeking relief – only one never made it out alive. As the investigator, it\'s up to you to navigate a maze of fractured testimonies, hidden system overrides, encrypted files, and buried secrets. In a world where memory is fragile and truth is easily manipulated, can you uncover who turned the promise of healing into cold-blooded murder?',
-      price: '$10.99',
-      status: 'Available'
-    },
-    // Data for 'deadAir' will now primarily come from imported deadAirCaseData
-    'deadAir': { 
-      id: 'deadAir',
-      title: 'Dead Air', // Will be overridden by deadAirCaseData.title
-      imageName: 'deadair.png', // Will be overridden by deadAirCaseData.coverImage
-      description: 'A late-night radio host is found dead during his live broadcast. Was it a technical malfunction, a hidden message gone wrong, or something more sinister echoing through the airwaves?', // Will be overridden
-      price: 'Free', // Keep price and status from here
-      status: 'Available' 
-    }
-  };
-  return allCases[caseId] || null;
-};
-
-const { height: screenHeight } = Dimensions.get('window'); // Get screen height
+const { height: screenHeight } = Dimensions.get('window');
 
 const CaseDetailScreen = ({ route, navigation }) => {
   const { caseId } = route.params;
+  const [caseData, setCaseData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [showSummary, setShowSummary] = useState(false);
   
-  let caseDetails;
-  let imageSource;
-  let displayTitle;
-  let displayDescription;
+  useEffect(() => {
+    console.log("CaseDetailScreen received caseId:", caseId);
+    const fetchCaseData = async () => {
+      setIsLoading(true);
+      setCaseData(null); // Reset caseData before fetching
+      console.log('[fetchCaseData] Starting to fetch for caseId:', caseId);
+      try {
+        const bundle = await loadBundleData(caseId);
+        console.log('[fetchCaseData] Raw bundle from loadBundleData:', bundle);
 
-  const placeholderData = getCaseDetailsFromPlaceholder(caseId);
-
-  if (caseId === 'deadAir') {
-    caseDetails = { // Combine data
-      ...placeholderData, // For price, status, and any other common fields
-      ...deadAirCaseData, // Overrides title, description, image from deadAirCaseData
+        if (bundle && bundle.metadata && bundle.manifest && bundle.puzzles) {
+          const newCaseData = {
+            id: caseId,
+            metadata: bundle.metadata.default || bundle.metadata,
+            manifest: bundle.manifest.default || bundle.manifest,
+            puzzles: bundle.puzzles.default || bundle.puzzles,
+            coverImage: bundle.coverImageRequire,
+            price: caseId === 'dead-air' ? 'Free' : '$10.99',
+            status: 'Available',
+          };
+          console.log('[fetchCaseData] Processed newCaseData:', newCaseData);
+          setCaseData(newCaseData);
+        } else {
+          console.log('[fetchCaseData] Bundle was null or incomplete.');
+          setCaseData(null); // Ensure caseData is null if bundle is bad
+        }
+      } catch (error) {
+        // This catch might be redundant if loadBundleData also catches and returns null,
+        // but it's here for safety.
+        console.error("[fetchCaseData] Error processing bundle:", error);
+        setCaseData(null);
+      }
+      setIsLoading(false);
+      console.log('[fetchCaseData] Finished fetching.');
     };
-    displayTitle = deadAirCaseData.title;
-    displayDescription = deadAirCaseData.crimeSceneReport?.summary || placeholderData?.description || 'No description available.';
-    imageSource = deadAirCaseData.coverImage; // Directly use the require statement
-  } else {
-    caseDetails = placeholderData;
-    if (caseDetails) {
-      displayTitle = caseDetails.title;
-      displayDescription = caseDetails.description;
-      imageSource = getCaseImageSource(caseDetails.imageName);
+
+    if (caseId) {
+      fetchCaseData();
     }
-  }
+  }, [caseId]);
 
   React.useLayoutEffect(() => {
     navigation.setOptions({
@@ -88,43 +95,61 @@ const CaseDetailScreen = ({ route, navigation }) => {
     });
   }, [navigation]);
 
-  if (!caseDetails) {
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.safeAreaFullHeight}>
+        <View style={styles.containerCenter}>
+          <Text>Loading case details...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!caseData) {
     return (
       <SafeAreaView style={styles.safeAreaFullHeight}> 
         <View style={styles.containerCenter}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.customHeaderBackButtonOnError}>
             <Text style={styles.customHeaderBackButtonTextOnError}>‹ Back</Text>
           </TouchableOpacity>
-          <Text>Case not found.</Text>
+          <Text>Case not found or error loading.</Text>
         </View>
       </SafeAreaView>
     );
   }
 
+  const displayTitle = caseData.metadata?.title || 'Case Details';
+  // Assuming manifest.scenes[0].file might point to an intro/summary markdown. Or use metadata.description.
+  const displayDescription = caseData.metadata?.description || caseData.manifest?.scenes?.[0]?.title || 'No description available.';
+  const imageSource = caseData.coverImage;
+
   const handleViewSummary = () => {
-    console.log('handleViewSummary called');
     setShowSummary(!showSummary);
   };
 
   const handleAction = () => {
-    if (caseDetails.status === 'Available') {
-      if (caseDetails.price === 'Free') {
-        navigation.navigate('GamePlay', { caseId: caseDetails.id });
+    if (caseData.status === 'Available') {
+      if (caseData.price === 'Free') {
+        // TODO: Navigate to InvestigationDashboardScreen and pass necessary data / trigger engine load
+        Alert.alert("Play Case", `Proceed to play ${displayTitle}`);
+        // navigation.navigate('InvestigationDashboardScreen', { caseId: caseData.id }); 
       } else {
-        navigation.navigate('Checkout', { caseId: caseDetails.id, caseTitle: displayTitle, price: caseDetails.price });
+        navigation.navigate('CheckoutScreen', { caseId: caseData.id, caseTitle: displayTitle, price: caseData.price });
       }
-    } else if (caseDetails.status === 'Owned' || caseDetails.status === 'Play Now') {
-      navigation.navigate('GamePlay', { caseId: caseDetails.id });
-    } else if (caseDetails.status === 'Coming Soon') {
-      alert('This case is coming soon!');
+    } else if (caseData.status === 'Owned' || caseData.status === 'Play Now') {
+      // TODO: Navigate to InvestigationDashboardScreen and pass necessary data / trigger engine load
+      Alert.alert("Play Case", `Proceed to play ${displayTitle}`);
+      // navigation.navigate('InvestigationDashboardScreen', { caseId: caseData.id }); 
+    } else if (caseData.status === 'Coming Soon') {
+      Alert.alert('This case is coming soon!');
     }
   };
 
   let buttonText = 'Play';
   let buttonDisabled = false;
-  if (caseDetails.status === 'Available') {
-    buttonText = caseDetails.price === 'Free' ? 'Play' : `Buy (${caseDetails.price})`;
-  } else if (caseDetails.status === 'Coming Soon') {
+  if (caseData.status === 'Available') {
+    buttonText = caseData.price === 'Free' ? 'Play' : `Buy (${caseData.price})`;
+  } else if (caseData.status === 'Coming Soon') {
     buttonText = 'Coming Soon';
     buttonDisabled = true;
   }
@@ -179,14 +204,13 @@ const CaseDetailScreen = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   safeAreaFullHeight: { 
     flex: 1,
-    backgroundColor: '#1c1c1e', // Changed to dark background
-    justifyContent: 'space-between', // Push image scroll to top, details to bottom
+    backgroundColor: '#1c1c1e', 
+    justifyContent: 'space-between', 
   },
-  scrollContainer: { // Renamed from container to avoid confusion
-    // flex: 1, // Removed flex: 1 so it doesn't fight with detailsContainer
-    // backgroundColor: '#ffffff', // Removed, inherits from safeArea or shows image
+  scrollContainer: {
+    // flex: 1, // Removed flex: 1
   },
-  scrollContentContainer: { // Added for centering image if needed
+  scrollContentContainer: { 
     flexGrow: 1,
     justifyContent: 'center',
   },
@@ -195,6 +219,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+    backgroundColor: '#1c1c1e', // Match background
   },
   customHeaderOverlay: {
     position: 'absolute',
@@ -229,7 +254,7 @@ const styles = StyleSheet.create({
       fontWeight: 'bold',
   },
   imagePlaceholder: {
-    height: screenHeight * 0.4, // Use a portion of screen height for placeholder as well
+    height: screenHeight * 0.4, 
     backgroundColor: '#cccccc',
     justifyContent: 'center',
     alignItems: 'center',
@@ -241,56 +266,57 @@ const styles = StyleSheet.create({
   },
   caseImageActual: {
      width: '100%',
-     height: screenHeight * 0.65, // Increased height to 65% of screen height
-     backgroundColor: '#000', // Added a background color for letterboxing if image is not full aspect ratio
+     height: screenHeight * 0.65, 
+     backgroundColor: '#000', 
   },
   detailsContainer: {
     padding: 20,
-    paddingBottom: Platform.OS === 'ios' ? 30 : 20, // Add padding at the bottom, more for iOS notch/home indicator
-    backgroundColor: 'transparent', // Make the container background transparent
+    paddingBottom: Platform.OS === 'ios' ? 30 : 20, 
+    backgroundColor: 'transparent',
   },
   title: {
-    fontSize: 28,
+    fontSize: 28, // Increased size
     fontWeight: 'bold',
-    marginBottom: 15,
+    color: '#ffffff',
     textAlign: 'center',
-    color: '#ffffff', // Changed to light color
-  },
-  description: {
-    fontSize: 16,
-    lineHeight: 24,
-    textAlign: 'justify',
-    marginBottom: 25,
-    color: '#e0e0e0',
+    marginBottom: 10,
   },
   summaryButton: {
-    backgroundColor: '#333333',
-    paddingVertical: 12,
-    paddingHorizontal: 25,
-    borderRadius: 8,
-    alignItems: 'center',
+    backgroundColor: '#333333', // Darker button
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+    alignSelf: 'center',
     marginBottom: 15,
   },
   summaryButtonText: {
     color: '#ffffff',
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
   },
+  description: {
+    fontSize: 15, // Slightly larger description
+    color: '#e0e0e0', // Lighter text for dark background
+    textAlign: 'left',
+    marginBottom: 20,
+    lineHeight: 22, // Improved readability
+  },
   actionButton: {
-    backgroundColor: '#5D3FD3',
+    backgroundColor: '#e74c3c',
     paddingVertical: 15,
     paddingHorizontal: 30,
     borderRadius: 8,
     alignItems: 'center',
+    marginTop: 10, // Ensure some space
+  },
+  disabledButton: {
+    backgroundColor: '#95a5a6',
   },
   actionButtonText: {
     color: '#ffffff',
     fontSize: 18,
     fontWeight: 'bold',
   },
-  disabledButton: {
-    backgroundColor: '#555555',
-  }
 });
 
 export default CaseDetailScreen; 

@@ -1,5 +1,15 @@
 {
   "initialSceneId": "crime_report_scene",
+  "characters": [
+    { "id": "cihan_k", "name": "Cihan Karakaş" },
+    { "id": "beril_y", "name": "Beril Yaman" },
+    { "id": "selin_a", "name": "Selin Aydın" },
+    { "id": "suheyla_b", "name": "Süheyla Bora" },
+    { "id": "mine_t", "name": "Mine Taşdemir" },
+    { "id": "murat_k", "name": "Murat Kaya" },
+    { "id": "haluk_s", "name": "Haluk Sezgin" },
+    { "id": "levent_e", "name": "Levent Ertuğrul" }
+  ],
   "scenes": [
     {
       "id": "crime_report_scene",
@@ -166,6 +176,11 @@
       "title": "Technical Analysis Report",
       "file": "evidence_files/12_tech_analysis_report.md",
       "documentType": "Technical Analysis Report"
+    },
+    {
+      "id": "final_revelation_scene",
+      "title": "The Truth Unfolds",
+      "file": "scenes/final_revelation.md"
     },
     {
       "id": "onur_pc_report",

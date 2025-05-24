@@ -1,181 +1,265 @@
-// packages/case-engine/src/types.ts
+export interface CaseFile {
+  path: string;
+  content: string;
+}
 
-// === Engine Actions ===
-// Actions are dispatched to the engine to trigger changes or operations.
-export type EngineAction =
-  | { type: 'OPEN_SCENE'; id: string }
-  | { type: 'SUBMIT_ANSWER'; puzzleId: string; answer: string }
-  | { type: 'USE_HINT'; puzzleId: string } // Assuming hint is tied to a puzzle
-  | { type: 'ACCUSE'; suspectId: string };
+export interface CaseAsset {
+  path: string; // e.g. images/character.png
+  type: 'image' | 'audio' | 'video' | 'document'; // Add more as needed
+}
 
-// === Engine Event Names ===
-// Event names are used when subscribing to engine events.
-export type EngineEventName =
-  | 'SCENE_OPENED'
-  | 'PUZZLE_SOLVED'
-  | 'PUZZLE_ATTEMPT_FAILED'
-  | 'HINT_REVEALED'
-  | 'OBJECTIVE_UPDATED'
-  | 'GAME_COMPLETED'
-  | 'STATE_CHANGED'; // A general event for state updates, useful for UI binding
-
-// === Engine Event Payloads ===
-// These define the structure of data passed with each event.
-// The 'on' method's handler function will receive a payload object.
-// e.g., engine.on('SCENE_OPENED', (payload: SceneOpenedPayload) => { /* ... */ });
-
-export type SceneOpenedPayload = {
-  sceneId: string;
-  // sceneData?: any; // More specific type for scene content can be added later
-};
-
-export type PuzzleSolvedPayload = {
-  puzzleId: string;
-  // unlockedItemIds?: string[]; // e.g., new evidence or scenes unlocked by this puzzle
-};
-
-export type PuzzleAttemptFailedPayload = {
-  puzzleId: string;
-  submittedAnswer: string;
-};
-
-export type HintRevealedPayload = {
-  puzzleId: string;
-  hintText: string;
-  hintIndex: number;
-  remainingHints?: number;
-};
-
-export type ObjectiveUpdatedPayload = {
-  objectiveId: string;
-  status: 'new' | 'active' | 'completed' | 'failed';
-  description?: string;
-};
-
-export type GameCompletedPayload = {
-  outcome: string; // e.g., "accused_correctly", "ran_out_of_time"
-  details?: any; // Any specific details about the game end
-};
-
-// For STATE_CHANGED, the payload would likely be the new EngineState or a part of it.
-export type StateChangedPayload = {
-  newState: EngineState; // Or Partial<EngineState> if sending diffs
-};
-
-// === Case Bundle Structure ===
-// Defines the structure of a case that the engine loads.
-
-export interface CaseBundle {
-  id: string;
+export interface CaseMetadata {
+  caseId?: string; // Added from bundle's metadata.json
   title: string;
-  tagline?: string;
+  tagline?: string; // Added from bundle's metadata.json
+  description?: string;
+  author?: string;
   version?: string;
-  duration_estimate_min?: string;
-  cover?: string; // Path to cover image
-  manifest: CaseManifest;
-  puzzles?: PuzzleDefinition[]; // From puzzles.yml
-  // Potentially i18n strings, character profiles, etc.
-  assetsBasePath?: string; // Base path for resolving relative asset URLs in scenes/evidence
-  sceneFiles?: Record<string, string>; // Added for mock bundle
-  assets?: Record<string, string>; // Added for mock bundle
-}
-
-// === New Types for Computer Interface Scenes ===
-export interface ComputerFileReference {
-  name: string;         // Filename e.g., "11-03-2025.pdf"
-  path: string;         // Direct path to the asset e.g., "assets/computer_files/onur/02-03-2025.pdf"
-  fileType: 'pdf' | 'audio' | 'text' | 'image'; // To help UI render an appropriate icon or viewer
-}
-
-export interface ComputerFolder {
-  name: string;
-  password?: string;    // Optional password for the folder
-  files: ComputerFileReference[];
-  subFolders?: ComputerFolder[]; // For potential future nested folders - type should be ComputerFolder[]
-}
-
-export interface ComputerInterfaceData {
-  initialPassword?: string; // Password to "unlock" the computer itself
-  desktopBackgroundImage?: string; // Optional path to a desktop background image
-  folders: ComputerFolder[];
-}
-// === End of New Types for Computer Interface Scenes ===
-
-export interface CaseManifest {
-  initialSceneId?: string; // Optional: if not specified, could default to the first in the scenes array
-  scenes: SceneDefinition[];
-  // Global objectives, initial inventory, etc. could go here
-}
-
-export interface SceneDefinition {
-  id: string;
-  file?: string; // Path to scene file (e.g., .md, .json, or asset like .pdf, .png). Optional if computerInterface is defined.
-  title?: string; // Display title for the scene
-  documentType?: string; // Added for UI hints based on document category
-  unlock?: UnlockCondition;
-  // For JSON-defined scenes (as per your example scenes/02_evidence_loop.json)
-  layout?: string; // e.g., 'split', 'single-column'
-  widgets?: SceneWidget[];
-  objectives?: (string | { id: string; text: string; initiallyActive?: boolean })[];
-  puzzles_required_to_exit?: string[]; // IDs of puzzles that must be solved to 'complete' this scene
-  actions?: SceneAction[]; // e.g., buttons within a scene
-  computerInterface?: ComputerInterfaceData; // New field for computer interface scenes
-}
-
-export interface SceneWidget {
-  type: 'image' | 'document_viewer' | 'text_block' | 'video' | 'audio';
-  src: string; // Path to asset or direct content
-  caption?: string;
-  // Other widget-specific properties, e.g., pdfPageRange for document_viewer
-  pdfPageRange?: string; // e.g., "2-8"
-}
-
-export interface SceneAction {
-  label: string;
-  action: EngineAction['type']; // e.g., 'SUBMIT_ANSWER'
-  puzzleId?: string; // if action is SUBMIT_ANSWER
-  // Other properties based on the action type
-}
-
-export interface UnlockCondition {
-  after?: string; // Unlocks after a specific sceneId is completed/visited
-  puzzle?: string; // Unlocks after a specific puzzleId is solved
-  all_puzzles_solved?: boolean;
-  objective?: string; // Unlocks after a specific objectiveId is completed
-  // Could be extended with AND/OR logic or item requirements
+  createdAt?: string;
+  tags?: string[]; // Corresponds to 'genre' in bundle's metadata.json
+  coverImage?: string; // Path to an asset, corresponds to 'cover'
+  durationEstimate?: string; // Added from bundle's metadata.json
 }
 
 export interface Hint {
   text: string;
-  cost?: number;
+  cost?: number; // Optional: cost to reveal the hint
+  revealed?: boolean; // Runtime state, not part of initial definition
 }
 
 export interface PuzzleDefinition {
   id: string;
-  type: string; // e.g., 'substitution', 'password', 'logic', 'timeline'
-  source?: string; // Reference to evidence or context for the puzzle
-  solution?: any; // Can be string, number, object depending on puzzle type
-  answer?: any; // Alias for solution, as in your example
+  type: 'text' | 'image' | 'cipher' | 'logic' | 'text_input'; // Example types, added text_input
+  prompt?: string;
+  solution: string | string[]; // Can be a single string or multiple valid answers
+  feedback?: string; // General feedback on solve/fail, or specific for attempts
   hints?: Hint[];
+  asset?: string; // Path to an image/audio asset related to the puzzle
+  unlocks?: string[]; // IDs of scenes/puzzles/objectives this puzzle unlocks
+  title?: string; // Optional title for the puzzle
+  description?: string; // Optional description
 }
 
+export interface ObjectiveDefinition {
+  id: string;
+  description: string;
+  targetSceneId?: string; // Optional: scene that needs to be visited
+  targetPuzzleId?: string; // Optional: puzzle that needs to be solved
+  isCompleted?: boolean; // Runtime state
+}
+
+export interface UnlockCondition {
+  after?: string[]; // Scene IDs that must be completed/visited first
+  puzzle?: string; // Puzzle ID that must be solved first
+  objective?: string; // Objective ID that must be completed first
+  all_puzzles_solved?: boolean | string[]; // True if all puzzles, or list of specific puzzle IDs
+}
+
+export interface ComputerFile {
+  name: string;
+  path: string; // Path to an asset if it's a downloadable file
+  content?: string; // Or direct content if it's a text file shown in interface
+  fileType: 'pdf' | 'txt' | 'img' | 'audio';
+}
+
+export interface ComputerFolder {
+  name: string;
+  password?: string;
+  files: ComputerFile[];
+  subFolders?: ComputerFolder[];
+}
+
+export interface ComputerInterfaceDefinition {
+  initialPassword?: string;
+  desktopBackgroundImage?: string; // Path to an asset
+  folders: ComputerFolder[];
+}
+
+export interface SceneWidget {
+  type: 'image' | 'audio_player' | 'text_box' | 'button_link';
+  src?: string; // For image, audio
+  text?: string; // For text_box, button
+  linkToSceneId?: string; // For button_link
+}
+
+export interface SceneDefinition {
+  id: string;
+  title: string;
+  file?: string; // Path to markdown file for scene content (if not computerInterface)
+  type?: 'markdown' | 'computer_interface' | 'interactive_map' | 'interview'; // For future expansion
+  unlock?: UnlockCondition;
+  widgets?: SceneWidget[];
+  computerInterface?: ComputerInterfaceDefinition; // If type is 'computer_interface'
+  documentType?: string; // e.g., "Interview Transcript", "Evidence Report"
+  characterIds?: string[]; // Add this line for characters in the scene
+}
+
+export interface CharacterDefinition {
+  id: string;
+  name: string;
+  image?: string; // Optional path to character image asset
+  description?: string; // Optional short bio or notes
+}
+
+export interface CaseManifest {
+  initialSceneId: string;
+  scenes: SceneDefinition[];
+  puzzles?: PuzzleDefinition[];
+  objectives?: ObjectiveDefinition[];
+  characters?: CharacterDefinition[];
+  assets?: CaseAsset[];
+  metadata?: CaseMetadata;
+}
+
+export interface CaseBundle {
+  manifest: CaseManifest;
+  files: CaseFile[]; // Scene markdown files, puzzle data, etc.
+  // Optional: metadata can be part of manifest or separate like this
+  // metadata: CaseMetadata; 
+  // description?: string;
+  // author?: string;
+  // releaseDate?: string;
+  // tags?: string[];
+  // coverImage?: string;
+  // sceneFiles?: { [key: string]: string }; // sceneId to filePath mapping - DEPRECATED if using CaseFile[]
+  // assets?: { [key: string]: string }; // assetId to filePath mapping - DEPRECATED if using CaseFile[]
+}
+
+// === Engine Action Types and Payloads ===
+export type EngineActionType =
+  | 'LOAD_BUNDLE'
+  | 'START_CASE'
+  | 'OPEN_SCENE'
+  | 'SUBMIT_ANSWER'
+  | 'USE_HINT'
+  | 'SUBMIT_FINAL_ACCUSATION';
+
+export interface LoadBundlePayload {
+  bundle: CaseBundle;
+}
+
+export interface StartCasePayload { }
+
+export interface OpenScenePayload {
+  sceneId: string;
+}
+
+export interface SubmitAnswerPayload {
+  puzzleId: string;
+  answer: string;
+}
+
+export interface UseHintPayload {
+  puzzleId: string;
+  hintIndex: number; // Or hintId: string if hints have unique IDs
+}
+
+export interface SubmitFinalAccusationPayload {
+  characterId: string;
+}
+
+export type EngineAction =
+  | { type: 'LOAD_BUNDLE'; payload: LoadBundlePayload }
+  | { type: 'START_CASE'; payload?: StartCasePayload } // Making payload optional as it's empty
+  | { type: 'OPEN_SCENE'; payload: OpenScenePayload }
+  | { type: 'SUBMIT_ANSWER'; payload: SubmitAnswerPayload }
+  | { type: 'USE_HINT'; payload: UseHintPayload }
+  | { type: 'SUBMIT_FINAL_ACCUSATION'; payload: SubmitFinalAccusationPayload };
+
 // === Engine State ===
-// Represents the overall state of the game being managed by the engine.
-export interface EngineState {
-  currentCaseId: string | null;
+export interface CaseState {
+  currentBundle: CaseBundle | null;
   currentSceneId: string | null;
   unlockedSceneIds: Set<string>;
   solvedPuzzleIds: Set<string>;
-  activeObjectives: Set<string>; // Objectives currently shown to the player
-  completedObjectives: Set<string>;
-  failedObjectives: Set<string>;
-  // inventory: Set<string>; // For items or clues collected
-  hintsUsedCount: { [puzzleId: string]: number };
-  isGameCompleted: boolean;
-  gameOutcome?: string; // Stores the outcome from GameCompletedPayload
-  // Any other dynamic state, e.g., timers, scores
+  completedObjectiveIds: Set<string>;
+  hintsUsed: { [puzzleId: string]: Set<number> }; // puzzleId to set of hint indices used
+  inventory: Set<string>; // e.g., item IDs collected by the player
+  caseStatus: CaseStatus;
+  errorMessage?: string;
+  actionHistory: EngineAction[];
+  eventHistory: { eventType: CaseEventType; payload: any; timestamp: number }[];
 }
 
-// === Unsubscribe Function ===
+export type CaseStatus = 'UNINITIALIZED' | 'LOADING' | 'LOADED' | 'RUNNING' | 'PAUSED' | 'COMPLETED' | 'ERROR';
+
+// === Engine Event Types and Payloads ===
+export type CaseEventType =
+  | 'CASE_LOADED'
+  | 'CASE_STARTED'
+  | 'SCENE_OPENED'
+  | 'SCENE_UNLOCK_FAILED'
+  | 'PUZZLE_SOLVED'
+  | 'PUZZLE_ATTEMPT_FAILED'
+  | 'HINT_REVEALED'
+  | 'OBJECTIVE_COMPLETED' // Renamed from OBJECTIVE_UPDATED for clarity
+  | 'ALL_PUZZLES_SOLVED'
+  | 'FINAL_REVELATION_TRIGGERED';
+
+export interface CaseLoadedPayload {
+  manifest: CaseManifest;
+  initialSceneId: string;
+}
+
+export interface CaseStartedPayload {
+  initialSceneId: string;
+  // any other relevant info when case starts
+}
+
+export interface SceneOpenedPayload {
+  sceneId: string;
+  sceneDefinition: SceneDefinition;
+  content?: string; // Markdown content, if applicable
+}
+
+export interface SceneUnlockFailedPayload {
+  sceneId: string;
+  reason: string; // e.g., "Puzzle 'xyz' not solved"
+}
+
+export interface PuzzleSolvedPayload {
+  puzzleId: string;
+}
+
+export interface PuzzleAttemptFailedPayload {
+  puzzleId: string;
+  attemptedAnswer: string;
+}
+
+export interface HintRevealedPayload {
+  puzzleId: string;
+  hint: Hint;
+  hintIndex: number;
+  hintsUsedCount: number; // Total hints revealed for this puzzle
+}
+
+export interface ObjectiveCompletedPayload {
+  objectiveId: string;
+}
+
+export interface AllPuzzlesSolvedPayload { }
+
+export interface FinalRevelationTriggeredPayload {
+  accusedCharacterId: string;
+  revelationSceneId: string;
+}
+
+// Map event types to their payload types
+export interface EventPayloadMap {
+  CASE_LOADED: CaseLoadedPayload;
+  CASE_STARTED: CaseStartedPayload;
+  SCENE_OPENED: SceneOpenedPayload;
+  SCENE_UNLOCK_FAILED: SceneUnlockFailedPayload;
+  PUZZLE_SOLVED: PuzzleSolvedPayload;
+  PUZZLE_ATTEMPT_FAILED: PuzzleAttemptFailedPayload;
+  HINT_REVEALED: HintRevealedPayload;
+  OBJECTIVE_COMPLETED: ObjectiveCompletedPayload;
+  ALL_PUZZLES_SOLVED: AllPuzzlesSolvedPayload;
+  FINAL_REVELATION_TRIGGERED: FinalRevelationTriggeredPayload;
+}
+
+// Generic event listener type
+export type EngineEventListener<K extends CaseEventType> = (payload: EventPayloadMap[K]) => void;
+
 // Type for the function returned by `engine.on(...)` to stop listening.
-export type Unsub = () => void; 
+export type Unsub = () => void;
